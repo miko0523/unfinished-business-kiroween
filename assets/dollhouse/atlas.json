@@ -1,0 +1,127 @@
+{
+  "image": "dollhouse-shared-v3-hd.png",
+  "pixelRatio": 2,
+  "size": [
+    1794,
+    4710
+  ],
+  "boundsUnits": "physical pixels in atlas, top-left origin",
+  "moduleUnits": "logical pixels for logicalSize, topJoin, bottomJoin and wallAnchorsX",
+  "logicalWidth": 801,
+  "wallAnchorsX": [
+    34,
+    762
+  ],
+  "modules": [
+    {
+      "id": "roof",
+      "logicalPng": "roof.png",
+      "hdPng": "2x/roof.png",
+      "x": 96,
+      "y": 96,
+      "w": 1602,
+      "h": 534,
+      "logicalSize": [
+        801,
+        267
+      ],
+      "topJoin": 183,
+      "bottomJoin": 256
+    },
+    {
+      "id": "lobby",
+      "logicalPng": "lobby.png",
+      "hdPng": "2x/lobby.png",
+      "x": 96,
+      "y": 726,
+      "w": 1602,
+      "h": 564,
+      "logicalSize": [
+        801,
+        282
+      ],
+      "topJoin": 6,
+      "bottomJoin": 277
+    },
+    {
+      "id": "floor-01",
+      "logicalPng": "1x/floor-01.png",
+      "hdPng": "2x/floor-01.png",
+      "x": 96,
+      "y": 1386,
+      "w": 1602,
+      "h": 574,
+      "logicalSize": [
+        801,
+        287
+      ],
+      "topJoin": 3,
+      "bottomJoin": 284
+    },
+    {
+      "id": "floor-02",
+      "logicalPng": "1x/floor-02.png",
+      "hdPng": "2x/floor-02.png",
+      "x": 96,
+      "y": 2056,
+      "w": 1602,
+      "h": 568,
+      "logicalSize": [
+        801,
+        284
+      ],
+      "topJoin": 3,
+      "bottomJoin": 282
+    },
+    {
+      "id": "floor-03",
+      "logicalPng": "1x/floor-03.png",
+      "hdPng": "2x/floor-03.png",
+      "x": 96,
+      "y": 2720,
+      "w": 1602,
+      "h": 564,
+      "logicalSize": [
+        801,
+        282
+      ],
+      "topJoin": 3,
+      "bottomJoin": 280
+    },
+    {
+      "id": "floor-04",
+      "logicalPng": "1x/floor-04.png",
+      "hdPng": "2x/floor-04.png",
+      "x": 96,
+      "y": 3380,
+      "w": 1602,
+      "h": 566,
+      "logicalSize": [
+        801,
+        283
+      ],
+      "topJoin": 3,
+      "bottomJoin": 281
+    },
+    {
+      "id": "floor-05",
+      "logicalPng": "1x/floor-05.png",
+      "hdPng": "2x/floor-05.png",
+      "x": 96,
+      "y": 4042,
+      "w": 1602,
+      "h": 572,
+      "logicalSize": [
+        801,
+        286
+      ],
+      "topJoin": 2,
+      "bottomJoin": 285
+    }
+  ],
+  "stacking": {
+    "origin": "top-left of each untrimmed module",
+    "align": "upper.bottomJoin to lower.topJoin",
+    "drawOrder": "lower first, upper last"
+  }
+}
