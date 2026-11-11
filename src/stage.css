@@ -1,0 +1,63 @@
+/*
+ * 抽屉上沿的小舞台与手机镜头。
+ * 被选中的 Ghost 本体（同一个元素）飞到抽屉上沿，所以动态层不能裁掉它，它也要盖在页面其他内容之上、抽屉之下。
+ */
+
+/* 有 Ghost 站在小舞台上时，动态层不再裁剪（平时仍裁掉从楼层外缘走进来的部分）。 */
+.house-overlay:has(.resident[data-staged]) {
+  overflow: visible;
+}
+
+.resident[data-staged] {
+  z-index: 15;
+}
+
+/* 站在舞台上时不显示脚下的小标签（它会压到抽屉上沿的标题）。 */
+.resident[data-staged] .ghost-tag {
+  display: none;
+}
+
+/* 手机“看全景 / 回到当前楼层”。 */
+.view-toggle {
+  align-self: center;
+  margin: 0 0 8px;
+}
+
+@media (max-width: 899px) {
+  .house-view:has(.task-card) .view-toggle {
+    align-self: flex-start;
+    padding-inline: 8px;
+  }
+}
+
+/*
+ * Ghost 的触控热区：按钮本体随舞台缩放，缩小后不足 44×44 CSS px 时，由伪元素补成 44×44。
+ * 同一层的两只 Home Anchor 之间只有 --hit-half-units 的一半距离（舞台逻辑单位）；两个热区在两只中间的中线上相接：
+ * 左边那只的热区向左延伸，右边那只向右延伸，中线两侧各留 0.5px，互不重叠、也不贴边。舞台够大时（一半距离 ≥ 22px）两个热区就是以自己为中心的正方形。
+ * 距离用 cqw 跟随实际渲染的舞台宽度（.house 是尺寸容器），不依赖脚本换算。
+ */
+.house {
+  container-type: inline-size;
+}
+.ghost-button {
+  /* 全局的 button 最小 44px 会把窄舞台上的 Ghost 按钮撑大，叠到同层的邻居上；热区由下面的伪元素按中线分开。 */
+  min-width: 0;
+  min-height: 0;
+}
+.ghost-button::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  width: 44px;
+  height: 44px;
+  /* 热区的下沿与按钮的下沿对齐、上沿高出一截：最低一层的热区不会压到门厅里同样要 44px 的纪念册按钮，站在抽屉上沿的 Ghost 也不会有一截热区落到抽屉下面。按钮本体仍在热区之内。 */
+  margin-top: -28px;
+  left: calc(50% - 22px);
+}
+.ghost-button[data-slot='0']::before {
+  left: auto;
+  right: calc(50% - min(22px, var(--hit-half-units, 120) * 100cqw / 809 - 0.5px));
+}
+.ghost-button[data-slot='1']::before {
+  left: calc(50% - min(22px, var(--hit-half-units, 120) * 100cqw / 809 - 0.5px));
+}

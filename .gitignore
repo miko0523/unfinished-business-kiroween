@@ -1,0 +1,15 @@
+.DS_Store
+node_modules/
+dist/
+*.log
+.env
+.env.*
+!.env.example
+
+.local-inputs/
+test-results/
+playwright-report/
+artifacts/phase13/
+
+artifacts/collection/
+artifacts/phase14/

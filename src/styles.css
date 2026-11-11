@@ -1,0 +1,962 @@
+html,
+body {
+  margin: 0;
+  min-height: 100%;
+  background: #0d1530;
+}
+
+.night-sky {
+  box-sizing: border-box;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 8px;
+  color: #f3ead2;
+  font-family: system-ui, sans-serif;
+}
+
+.night-sky h1 {
+  margin: 8px 0 12px;
+  font-size: 1.25rem;
+  font-weight: 600;
+}
+
+/* main 与页脚：和从前一样纵向居中排布，只是现在各自是正经的地标。 */
+.app-main {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  min-width: 0;
+}
+
+.app-footer {
+  width: 100%;
+  margin: 12px 0 4px;
+  text-align: center;
+}
+
+.app-footer nav {
+  display: flex;
+  justify-content: center;
+}
+
+.footer-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  text-decoration: none;
+}
+
+.house {
+  position: relative;
+  width: 100%;
+  min-width: 0;
+}
+
+.static-layer,
+.house-overlay {
+  position: absolute;
+  inset: 0;
+}
+
+/* 动态层：只有 Ghost 按钮接收指针；Ghost 从外缘走进来时被舞台边缘裁掉。 */
+.house-overlay {
+  pointer-events: none;
+  overflow: hidden;
+}
+
+/* 长楼小星星：只在动画期间存在；默认透明，动画取消时不留痕迹。 */
+.grow-sparkles {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  overflow: visible;
+}
+
+.grow-sparkle {
+  position: absolute;
+  width: 2.2%;
+  aspect-ratio: 1;
+  margin: -1.1% 0 0 -1.1%;
+  opacity: 0;
+  pointer-events: none;
+  background: #ffe9a8;
+  clip-path: polygon(50% 0, 62% 38%, 100% 50%, 62% 62%, 50% 100%, 38% 62%, 0 50%, 38% 38%);
+}
+
+.static-layer {
+  pointer-events: none;
+  user-select: none;
+}
+
+.static-module,
+.static-plate {
+  position: absolute;
+  display: block;
+  pointer-events: none;
+  -webkit-user-drag: none;
+}
+
+.static-plate {
+  box-sizing: border-box;
+  background: #2b2547;
+  border: 1px solid #4a4272;
+}
+
+:focus-visible {
+  outline: 3px solid #ffd479;
+  outline-offset: 2px;
+}
+
+/* 占位字：默认的灰在奶白底上不到 4.5:1，明确写成更深的灰。 */
+input::placeholder,
+textarea::placeholder {
+  color: #595964;
+  opacity: 1;
+}
+
+/* 浅色的面板（详情抽屉、纪念册、文字提示）里，金色轮廓太浅，改用深色轮廓，对浅底仍 ≥3:1。 */
+.task-card :focus-visible,
+.archive :focus-visible,
+.demo-bar :focus-visible {
+  outline-color: #3a2f22;
+}
+
+/*
+ * 画在旧宅插画上的两个控件（Ghost 按钮、门厅纪念册）：背景明暗不定，所以轮廓做成“深色内圈 + 白色外圈”。
+ * 深圈对相对亮度约 0.16 以上的底有 3:1，白圈对约 0.31 以下的底有 3:1，两圈合起来覆盖所有底色。
+ */
+.ghost-button:focus-visible,
+.archive-book:focus-visible {
+  outline-color: #ffffff;
+  outline-offset: 3px;
+  box-shadow: 0 0 0 3px #1b2547;
+}
+
+/* 这两个入口站在夜空上（不在浅色面板里），保持金色轮廓。 */
+.archive .archive-back:focus-visible,
+.footer-link:focus-visible {
+  outline-color: #ffd479;
+}
+
+.create-form {
+  box-sizing: border-box;
+  width: 100%;
+  max-width: 560px;
+  margin: 0 0 8px;
+  padding: 12px;
+  background: #1b2547;
+  border: 1px solid #3a4a80;
+  border-radius: 12px;
+}
+
+.create-form label {
+  display: block;
+  margin-bottom: 6px;
+  font-size: 1rem;
+}
+
+.create-row {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.create-row input {
+  flex: 1 1 200px;
+  min-width: 0;
+  min-height: 44px;
+  box-sizing: border-box;
+  padding: 0 12px;
+  font: inherit;
+  color: #1c1b22;
+  background: #fffaf0;
+  border: 2px solid #9aa7d6;
+  border-radius: 8px;
+}
+
+.create-row button {
+  min-height: 44px;
+  padding: 0 16px;
+  font: inherit;
+  color: #1c1b22;
+  background: #ffd479;
+  border: 2px solid #c9972b;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.create-error {
+  margin: 8px 0 0;
+  font-size: 1rem;
+  color: #ffd9c9;
+}
+
+.live-region {
+  margin: 0 0 8px;
+  min-height: 1.5em;
+  font-size: 1rem;
+  color: #cfd8ff;
+}
+
+.residents {
+  position: absolute;
+  inset: 0;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.resident {
+  position: absolute;
+}
+
+/* 语义列表的两层包裹只负责结构：各自铺满舞台，让住客项继续相对舞台按百分比定位。 */
+.resident-floor,
+.floor-residents {
+  position: absolute;
+  inset: 0;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.resident-floor {
+  pointer-events: none;
+}
+
+/* 程序化聚焦的列表容器本身不画焦点框（它铺满整个舞台）；之后的 Tab 会落在第一只 Ghost 上，那里有焦点框。 */
+.residents:focus {
+  outline: none;
+}
+
+/* 刚腾出的家还被离场的前任占着：新住客先不露面（仍在列表里），等前任走开再入住。 */
+.resident[data-waiting='true'] {
+  visibility: hidden;
+}
+
+/* 正在搬走的住客：只是一个会动的样子，不是控件。 */
+.residents-leaving {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+/*
+ * 减少动态时，读屏播报同一句话以静态文字提示显示在画面底部安全区（不位移、不缩放，不挡指针）。
+ * 放在底部是为了不盖住顶部的标题、语言切换和创建框；详情抽屉打开时抬到抽屉和站在抽屉上沿的 Ghost 之上（--drawer-h、--stage-h 由抽屉发布）。
+ * 颜色切换不超过 200ms。
+ */
+.live-caption {
+  position: fixed;
+  z-index: 40;
+  bottom: calc(8px + var(--drawer-h, 0px) + var(--stage-h, 0px) + env(safe-area-inset-bottom, 0px));
+  left: 8px;
+  right: 8px;
+  box-sizing: border-box;
+  width: fit-content;
+  max-width: min(560px, calc(100% - 16px));
+  min-height: 0;
+  margin: 0 auto;
+  padding: 8px 14px;
+  font-size: 1rem;
+  line-height: 1.4;
+  color: #3a2f22;
+  background: #fff4de;
+  border: 2px solid #c9972b;
+  border-radius: 12px;
+  box-shadow: 0 4px 14px rgba(8, 12, 30, 0.35);
+  pointer-events: none;
+  overflow-wrap: anywhere;
+}
+
+/* 提示显示时，焦点滚动要躲开它（提示的位置见上；高度由 LiveRegion 发布）。 */
+html:has(.live-caption) {
+  scroll-padding-bottom: calc(var(--caption-h, 48px) + 24px + var(--drawer-h, 0px) + var(--stage-h, 0px));
+}
+
+/* 页面最底部的页脚也不能被提示压住：提示显示期间，文末多留出一块地方（只加在文档末尾，上面的内容不动）。 */
+html:has(.live-caption) .app-footer {
+  padding-bottom: calc(var(--caption-h, 48px) + 24px);
+}
+
+/* 很窄的屏（含 200% 缩放的 320）：少占一点高度，才放得进标题与抽屉之间。 */
+@media (max-width: 360px) {
+  .live-caption {
+    left: 4px;
+    right: 4px;
+    max-width: calc(100% - 8px);
+    padding: 4px 8px;
+  }
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+
+.card-head-actions {
+  display: flex;
+  flex: 0 1 auto;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: flex-start;
+}
+
+.ghost-button {
+  position: relative;
+  display: block;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  background: none;
+  border: 0;
+  border-radius: 12px;
+  cursor: pointer;
+  pointer-events: auto;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.ghost-motion {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.ghost-sprite {
+  display: block;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+.ghost-button[aria-pressed='true'] .ghost-halo {
+  filter: drop-shadow(0 0 4px #fff3c4);
+}
+
+.ghost-tag {
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  margin-top: -6px;
+  padding: 1px 6px;
+  font-size: 1rem;
+  line-height: 1.3;
+  white-space: nowrap;
+  color: #fffaf0;
+  background: #1b2547;
+  border: 1px solid #3a4a80;
+  border-radius: 8px;
+  pointer-events: none;
+  /* 默认隐藏（不占布局：绝对定位）；仅 hover 或键盘焦点时轻柔出现。 */
+  opacity: 0;
+  transition: opacity 0.15s ease-out;
+}
+
+.ghost-button:focus-visible .ghost-tag {
+  opacity: 1;
+}
+
+@media (hover: hover) {
+  .ghost-button:hover .ghost-tag {
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ghost-tag {
+    transition: none;
+  }
+}
+
+.ghost-from-left {
+  --enter-from: -210%;
+}
+
+.ghost-from-right {
+  --enter-from: 200%;
+}
+
+/* 入住：从楼层外缘渐显并走向自己的位置，1.2 秒；只动 transform 与 opacity。 */
+.ghost-enter {
+  animation: ghost-move-in 1.2s ease-out both;
+}
+
+@keyframes ghost-move-in {
+  from {
+    opacity: 0;
+    transform: translateX(var(--enter-from));
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ghost-enter {
+    animation: none;
+  }
+}
+
+/* ---------- 阶段 5：详情卡、步骤、对话框 ---------- */
+
+.house-view:not([hidden]) {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  min-width: 0;
+}
+
+button,
+.archive-back,
+.footer-link {
+  min-width: 44px;
+  min-height: 44px;
+  padding: 0 12px;
+  font: inherit;
+  color: #1c1b22;
+  background: #f1e6c8;
+  border: 2px solid #9a7b32;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+button.primary {
+  background: #ffd479;
+  border-color: #c9972b;
+}
+
+button:disabled {
+  opacity: 0.55;
+  cursor: default;
+}
+
+/* 详情抽屉：所有视口都从底部滑出的暖米色磨砂面板；内容只在抽屉内部滚动。 */
+.task-card {
+  --drawer-ink: #3a2f22;
+  --drawer-soft: #5a4a38;
+  position: fixed;
+  z-index: 20;
+  bottom: 8px;
+  left: 0;
+  right: 0;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  width: min(760px, calc(100% - 16px));
+  max-height: min(58dvh, 58vh);
+  margin: 0 auto;
+  padding: 12px 14px 8px;
+  color: var(--drawer-ink);
+  background: rgba(255, 244, 222, 0.84);
+  border: 1px solid rgba(255, 255, 255, 0.55);
+  border-radius: 22px;
+  box-shadow: 0 -6px 28px rgba(8, 12, 30, 0.35), 0 2px 8px rgba(8, 12, 30, 0.2);
+  -webkit-backdrop-filter: blur(16px) saturate(1.15);
+  backdrop-filter: blur(16px) saturate(1.15);
+  animation: drawer-up 0.28s ease-out both;
+}
+
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .task-card {
+    background: rgb(255, 244, 222);
+  }
+}
+
+@keyframes drawer-up {
+  from {
+    opacity: 0;
+    transform: translateY(40px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.card-scroll {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  /* 滚动区会把超出的内容裁掉：左右各留 6px，焦点轮廓（2px 间隙 + 3px 线）才不会在整宽的输入框边上被切掉。 */
+  margin: 0 -6px;
+  padding: 0 6px 6px;
+}
+
+.task-card .muted,
+.task-card .count {
+  color: var(--drawer-soft);
+}
+
+.task-card .form-error {
+  color: #9a3b22;
+}
+
+.task-card .card-state[data-pending='true'] {
+  color: #7a5200;
+}
+
+.task-card .step {
+  border-bottom-color: rgba(106, 84, 52, 0.25);
+}
+
+.task-card textarea,
+.task-card .step-add input,
+.task-card .step-edit input {
+  background: rgba(255, 252, 244, 0.92);
+  border-color: #b79d6a;
+}
+
+/* 抽屉打开时，页面底部留出同样高度，Ghost 才有地方滚到抽屉上方。 */
+.night-sky {
+  padding-bottom: calc(8px + var(--drawer-h, 0px));
+}
+
+.task-card h2,
+.task-card h3,
+.dialog h2,
+.dialog h3 {
+  margin: 0 0 6px;
+  font-size: 1.125rem;
+  overflow-wrap: anywhere;
+}
+
+.card-head {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: flex-start;
+  justify-content: space-between;
+}
+
+.card-head h2 {
+  flex: 1 1 8rem;
+  min-width: 0;
+}
+
+.card-state {
+  margin: 0 0 8px;
+  font-size: 1rem;
+}
+
+.card-state[data-pending='true'] {
+  color: #ffe9a8;
+}
+
+.muted {
+  margin: 0 0 8px;
+  font-size: 1rem;
+  color: #cfd8ff;
+}
+
+.count {
+  margin: 4px 0;
+  font-size: 1rem;
+  color: #cfd8ff;
+}
+
+.form-error {
+  margin: 6px 0;
+  font-size: 1rem;
+  color: #ffd9c9;
+}
+
+.task-card .last-thing {
+  margin: 6px 0;
+  padding: 6px 10px;
+  border-left: 4px solid #e8a35c;
+  border-radius: 6px;
+  background: rgba(255, 214, 160, 0.22);
+  color: #ffe9cf;
+}
+
+.criteria.needs-done {
+  padding: 8px 10px;
+  border: 2px dashed #e8a35c;
+  border-radius: 10px;
+  background: rgba(255, 214, 160, 0.12);
+}
+
+.criteria-read {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 8px;
+  margin: 6px 0;
+}
+
+.criteria-title {
+  flex: 1 1 100%;
+  margin: 0;
+  font-size: 1rem;
+}
+
+.criteria-text {
+  flex: 1 1 160px;
+  margin: 0;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.criteria label,
+.step-add label,
+.dialog label {
+  display: block;
+  margin-bottom: 4px;
+  font-size: 1rem;
+}
+
+textarea,
+.step-add input,
+.step-edit input {
+  box-sizing: border-box;
+  width: 100%;
+  min-height: 44px;
+  padding: 8px 12px;
+  font: inherit;
+  color: #1c1b22;
+  background: #fffaf0;
+  border: 2px solid #9aa7d6;
+  border-radius: 8px;
+}
+
+.step-add input {
+  flex: 1 1 200px;
+  width: auto;
+  min-width: 0;
+}
+
+.step-list {
+  margin: 0 0 8px;
+  padding: 0;
+  list-style: none;
+}
+
+.step {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 8px;
+  align-items: center;
+  justify-content: space-between;
+  padding: 4px 0;
+  border-bottom: 1px solid #2c3866;
+}
+
+.step-check {
+  display: flex;
+  flex: 1 1 160px;
+  gap: 8px;
+  align-items: center;
+  min-height: 44px;
+  min-width: 0;
+  font-size: 1rem;
+  overflow-wrap: anywhere;
+}
+
+.step-check input {
+  flex: none;
+  width: 24px;
+  height: 24px;
+}
+
+.step[data-done='true'] .step-check span {
+  text-decoration: line-through;
+  text-decoration-thickness: 1px;
+}
+
+.step-actions,
+.step-edit {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.step-edit {
+  flex: 1 1 100%;
+  align-items: center;
+}
+
+.step-edit label {
+  flex: 1 1 100%;
+}
+
+.step-edit input {
+  flex: 1 1 160px;
+  width: auto;
+}
+
+.pending-box {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  margin-top: 8px;
+}
+
+.pending-badge {
+  padding: 4px 10px;
+  color: #3b2d00;
+  background: #ffe9a8;
+  border: 2px solid #c9972b;
+  border-radius: 999px;
+}
+
+.dialog {
+  box-sizing: border-box;
+  width: min(92vw, 440px);
+  padding: 16px;
+  color: #f3ead2;
+  background: #1b2547;
+  border: 2px solid #ffd479;
+  border-radius: 12px;
+}
+
+.dialog::backdrop {
+  background: rgba(5, 8, 20, 0.7);
+}
+
+.dialog-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+/* ---------- 门厅：纪念册按钮与暖灯 ---------- */
+
+.archive-book {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  padding: 0;
+  background: none;
+  border: 0;
+  border-radius: 8px;
+  pointer-events: auto;
+}
+
+/* ---------- 减少动态（其余 Ghost 与告别的部分见 ghost-motion.css、farewell.css） ---------- */
+
+@media (prefers-reduced-motion: reduce) {
+  .task-card {
+    animation: none !important;
+  }
+}
+
+/* ---------- 顶栏：留一份副本与收不起来的提示 ---------- */
+
+.top-tools {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 12px;
+  width: 100%;
+  max-width: 560px;
+  margin: 0 0 8px;
+}
+
+.keep-copy {
+  min-width: 44px;
+  min-height: 44px;
+  padding: 0 14px;
+  font: inherit;
+  color: #f3ead2;
+  background: transparent;
+  border: 2px solid #6d7bb5;
+  border-radius: 8px;
+}
+
+.keep-copy.loud {
+  color: #1c1b22;
+  background: #ffd479;
+  border-color: #c9972b;
+}
+
+.storage-notice {
+  flex: 1 1 220px;
+  margin: 0;
+  font-size: 1rem;
+  color: #ffe9a8;
+}
+
+/* ---------- 旧本子读不了时的恢复界面 ---------- */
+
+.recovery {
+  box-sizing: border-box;
+  width: 100%;
+  max-width: 560px;
+  padding: 16px;
+  color: #f3ead2;
+  background: #1b2547;
+  border: 2px solid #ffd479;
+  border-radius: 12px;
+}
+
+.recovery h2 {
+  margin: 0 0 8px;
+}
+
+.recovery-options {
+  display: grid;
+  gap: 12px;
+  padding: 0;
+  margin: 12px 0 0;
+  list-style: none;
+}
+
+.recovery-options button {
+  min-width: 44px;
+  min-height: 44px;
+  padding: 0 14px;
+  font: inherit;
+  color: #f3ead2;
+  background: transparent;
+  border: 2px solid #6d7bb5;
+  border-radius: 8px;
+}
+
+.recovery-options p {
+  margin: 4px 0 0;
+  font-size: 1rem;
+}
+
+.recovery-note {
+  color: #ffe9a8;
+}
+
+/* ---------- 示例：顶部提示条与入口 ---------- */
+
+.demo-try {
+  min-width: 44px;
+  min-height: 44px;
+  padding: 0 14px;
+  font: inherit;
+  color: #f3ead2;
+  background: transparent;
+  border: 2px solid #ffd479;
+  border-radius: 8px;
+}
+
+.demo-bar {
+  position: sticky;
+  top: 0;
+  z-index: 30;
+  box-sizing: border-box;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 8px 12px;
+  width: 100%;
+  margin: 0 0 4px;
+  padding: 8px 12px;
+  color: #3a2f22;
+  background: rgb(255, 232, 178);
+  border-bottom: 2px solid #c9972b;
+  border-radius: 0 0 10px 10px;
+}
+
+.demo-note {
+  flex: 1 1 240px;
+  margin: 0;
+  font-size: 1rem;
+}
+
+.demo-exit {
+  min-width: 44px;
+  min-height: 44px;
+  padding: 0 14px;
+  font: inherit;
+  color: #1c1b22;
+  background: #ffd479;
+  border: 2px solid #c9972b;
+  border-radius: 8px;
+}
+
+.demo-bar .demo-exit {
+  border-color: #7a5a1c;
+}
+
+.demo-bar .demo-exit:focus-visible {
+  outline: 3px solid #3a2f22;
+  outline-offset: 2px;
+}
+
+.demo-try:focus-visible {
+  outline: 3px solid #ffd479;
+  outline-offset: 2px;
+}
+
+/* 浅色的面板（详情抽屉、纪念册、文字提示）里，金色轮廓太浅，改用深色轮廓，对浅底仍 ≥3:1。 */
+.task-card :focus-visible,
+.archive :focus-visible,
+.demo-bar :focus-visible {
+  outline-color: #3a2f22;
+}
+
+/*
+ * 画在旧宅插画上的两个控件（Ghost 按钮、门厅纪念册）：背景明暗不定，所以轮廓做成“深色内圈 + 白色外圈”。
+ * 深圈对相对亮度约 0.16 以上的底有 3:1，白圈对约 0.31 以下的底有 3:1，两圈合起来覆盖所有底色。
+ */
+.ghost-button:focus-visible,
+.archive-book:focus-visible {
+  outline-color: #ffffff;
+  outline-offset: 3px;
+  box-shadow: 0 0 0 3px #1b2547;
+}
+
+/* 这两个入口站在夜空上（不在浅色面板里），保持金色轮廓。 */
+.archive .archive-back:focus-visible,
+.footer-link:focus-visible {
+  outline-color: #ffd479;
+}
+
+/* 详情抽屉是浅色磨砂面板：控件的边框要和它拉开 3:1（按最坏的“背后是最深夜景”合成），金棕色的边太浅，改成深一档。 */
+.task-card button,
+.task-card button.primary,
+.task-card textarea,
+.task-card .step-add input,
+.task-card .step-edit input {
+  border-color: #7a5a1c;
+}
+
+/*
+ * 程序移来的落脚点（页面标题、详情卡标题、纪念册标题）本身不是控件。
+ * 默认不画焦点轮廓：刚打开页面或用指针点进来时，留下一圈粗框只会显得笨重。
+ * 玩家用键盘时才画：不小于 3px 的实线，加一圈淡金色柔光；浅底（卡片、纪念册）用深一档的金色，夜空上的页面标题沿用亮金色。
+ */
+h1[tabindex='-1']:focus-visible,
+h2[tabindex='-1']:focus-visible,
+h3[tabindex='-1']:focus-visible {
+  outline: none;
+  box-shadow: none;
+}
+
+html[data-input='keyboard'] h2[tabindex='-1']:focus-visible,
+html[data-input='keyboard'] h3[tabindex='-1']:focus-visible {
+  outline: 3px solid #7a540a;
+  outline-offset: 4px;
+  border-radius: 6px;
+  box-shadow: 0 0 0 8px rgba(255, 212, 121, 0.4);
+}
+
+html[data-input='keyboard'] h1[tabindex='-1']:focus-visible {
+  outline: 3px solid #ffd479;
+  outline-offset: 4px;
+  border-radius: 6px;
+  box-shadow: 0 0 0 8px rgba(255, 212, 121, 0.22);
+}

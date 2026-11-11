@@ -1,0 +1,10 @@
+import { defineConfig } from 'vitest/config';
+import preact from '@preact/preset-vite';
+
+export default defineConfig({
+  plugins: [preact()],
+  test: {
+    include: ['tests/**/*.test.{ts,tsx}'],
+    exclude: ['e2e/**', 'node_modules/**', 'dist/**'],
+  },
+});

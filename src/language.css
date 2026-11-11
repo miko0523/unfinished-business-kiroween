@@ -1,0 +1,38 @@
+.app-header {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 12px;
+  align-items: center;
+  width: 100%;
+  max-width: 560px;
+  margin: 8px 0 12px;
+}
+
+.app-header h1 {
+  flex: 1 1 110px;
+  min-width: 0;
+  margin: 0;
+}
+
+.lang-switch {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: center;
+  max-width: 100%;
+  flex: 0 0 auto;
+}
+
+.lang-switch button {
+  min-width: 80px;
+  padding: 0 8px;
+  color: #f3ead2;
+  background: #1b2547;
+  border-color: #6d7bb5;
+}
+
+.lang-switch button[aria-pressed='true'] {
+  color: #1c1b22;
+  background: #ffd479;
+  border-color: #c9972b;
+}

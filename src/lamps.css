@@ -1,0 +1,97 @@
+/*
+ * 门厅暖灯（前 3 盏叠在原画灯笼上，后 9 盏是挂墙灯笼组件）。
+ * 暖金光晕慢呼吸（周期 4 秒，透明度只在 0.72–0.86 之间，波动 0.14 ≤ 15%），火苗只做极轻的摇曳（周期 3.4 秒，不改透明度），
+ * 全部不闪。新亮起的灯淡入加一两颗小星，只在点亮那一刻播一次；减少动态下全部静止。
+ */
+
+.warm-lamps {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.warm-lamp {
+  position: absolute;
+  display: block;
+}
+
+.warm-lamp > svg,
+.warm-lamp > img {
+  position: absolute;
+  display: block;
+  overflow: visible;
+}
+.warm-lamp > .lamp-art,
+.warm-lamp > .lamp-hook,
+.warm-lamp > .lamp-sparks {
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+.warm-lamp > .lamp-art[style] {
+  inset: auto;
+}
+.warm-lamp > .lamp-lantern {
+  max-width: none;
+  user-select: none;
+}
+
+.lamp-halo {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  display: block;
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  background: radial-gradient(circle, rgba(255, 212, 121, 0.62) 0%, rgba(255, 212, 121, 0.26) 38%, rgba(255, 212, 121, 0) 70%);
+  opacity: 0.8;
+  animation: lamp-breathe 4s ease-in-out infinite alternate;
+}
+
+@keyframes lamp-breathe {
+  from {
+    opacity: 0.72;
+  }
+  to {
+    opacity: 0.86;
+  }
+}
+
+.lamp-flame {
+  animation: lamp-sway 3.4s ease-in-out infinite alternate;
+}
+@keyframes lamp-sway {
+  from {
+    transform: scale(1, 0.97) skewX(-1.2deg);
+  }
+  to {
+    transform: scale(1, 1.03) skewX(1.2deg);
+  }
+}
+
+.warm-lamp-new {
+  animation: lamp-in 0.6s ease-out both;
+}
+@keyframes lamp-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.lamp-sparks {
+  pointer-events: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .warm-lamp-new,
+  .lamp-halo,
+  .lamp-flame {
+    animation: none !important;
+  }
+  .lamp-sparks {
+    display: none;
+  }
+}

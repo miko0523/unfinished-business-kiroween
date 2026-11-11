@@ -1,0 +1,195 @@
+{
+  "version": 3,
+  "basis": {
+    "width": 801,
+    "origin": "top-left of individual untrimmed 1x floor PNG",
+    "unit": "1x art px",
+    "yDirection": "down",
+    "anchor": "body bottom-center",
+    "rectFormat": "[xmin,ymin,xmax,ymax], inclusive",
+    "asset2xScale": 2
+  },
+  "envelopes": {
+    "idleOrGreet": {
+      "halfWidth": 56,
+      "height": 137
+    },
+    "choreWithTool": {
+      "halfWidth": 70,
+      "height": 180
+    }
+  },
+  "pairing": {
+    "minClearanceX": 8,
+    "leftStaysLeft": true,
+    "centerSharingX": [
+      363,
+      438
+    ],
+    "greetingXs": [
+      340,
+      460
+    ],
+    "workingXs": [
+      326,
+      474
+    ]
+  },
+  "floors": {
+    "floor-01": {
+      "size": [
+        801,
+        287
+      ],
+      "left": {
+        "idle": [
+          292,
+          254
+        ],
+        "safe": [
+          244,
+          208,
+          438,
+          260
+        ]
+      },
+      "right": {
+        "idle": [
+          532,
+          254
+        ],
+        "safe": [
+          363,
+          208,
+          606,
+          260
+        ]
+      },
+      "meetY": 254
+    },
+    "floor-02": {
+      "size": [
+        801,
+        284
+      ],
+      "left": {
+        "idle": [
+          272,
+          254
+        ],
+        "safe": [
+          204,
+          204,
+          438,
+          260
+        ]
+      },
+      "right": {
+        "idle": [
+          524,
+          254
+        ],
+        "safe": [
+          363,
+          204,
+          586,
+          260
+        ]
+      },
+      "meetY": 254
+    },
+    "floor-03": {
+      "size": [
+        801,
+        282
+      ],
+      "left": {
+        "idle": [
+          264,
+          252
+        ],
+        "safe": [
+          190,
+          206,
+          438,
+          258
+        ]
+      },
+      "right": {
+        "idle": [
+          528,
+          252
+        ],
+        "safe": [
+          363,
+          206,
+          596,
+          258
+        ]
+      },
+      "meetY": 252
+    },
+    "floor-04": {
+      "size": [
+        801,
+        283
+      ],
+      "left": {
+        "idle": [
+          276,
+          254
+        ],
+        "safe": [
+          210,
+          204,
+          438,
+          260
+        ]
+      },
+      "right": {
+        "idle": [
+          536,
+          254
+        ],
+        "safe": [
+          363,
+          204,
+          612,
+          260
+        ]
+      },
+      "meetY": 254
+    },
+    "floor-05": {
+      "size": [
+        801,
+        286
+      ],
+      "left": {
+        "idle": [
+          272,
+          256
+        ],
+        "safe": [
+          204,
+          206,
+          438,
+          262
+        ]
+      },
+      "right": {
+        "idle": [
+          528,
+          256
+        ],
+        "safe": [
+          363,
+          206,
+          596,
+          262
+        ]
+      },
+      "meetY": 256
+    }
+  }
+}

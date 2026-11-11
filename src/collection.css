@@ -1,0 +1,94 @@
+.collection-page, .reveal-page {
+  position: relative;
+  margin-top: 30px;
+  padding-top: 20px;
+  border-top: 1px solid #94734466;
+  text-align: center;
+}
+.collection-page h3, .reveal-page h3 {
+  margin: 0 0 8px;
+  font-family: 'Iowan Old Style', Palatino, Georgia, serif;
+  font-size: 1.2rem;
+  color: #5A4326;
+}
+.collection-page p, .reveal-page p { font-size: 1rem; line-height: 1.5; overflow-wrap: anywhere; }
+.collection-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 18px 8px;
+  margin: 20px 0 0;
+  padding: 0;
+  list-style: none;
+}
+.collection-grid li { min-width: 0; }
+.collection-grid .stamp-seal { display: block; width: min(100%, 96px); height: auto; margin: 0 auto 6px; }
+.collection-grid span { display: block; font-size: 1rem; overflow-wrap: anywhere; }
+.collection-grid [data-unlocked='false'] span { color: #756D5E; }
+/*
+ * The puzzle is a sticker pasted over both pages. The bed holds the gutter tails that peek out above and below it;
+ * the wrap tilts and carries the paper shadow (a filter would be clipped by the cut corner, so it sits one level up);
+ * the sticker itself is opaque paper with the corner cut away where the curl is drawn.
+ */
+.sticker-bed {
+  position: relative;
+  isolation: isolate;
+  margin: 18px 0 12px;
+  padding: 10px 0;
+}
+.sticker-bed::before {
+  content: '';
+  position: absolute;
+  inset: 0 0;
+  z-index: 0;
+  pointer-events: none;
+  background: linear-gradient(90deg, transparent 44%, #79552808 47%, #69461e38 49.4%, #4c341a55 50%, #fff3cf70 50.7%, #fff5d222 53%, transparent 57%);
+}
+.sticker-wrap {
+  position: relative;
+  z-index: 1;
+  width: calc(100% - 6px);
+  margin: 0 auto;
+  transform: rotate(-1.3deg);
+  filter: drop-shadow(0 1px 1px rgba(60, 38, 12, .38)) drop-shadow(3px 7px 7px rgba(40, 25, 5, .3));
+}
+.reveal-sticker {
+  box-sizing: border-box;
+  padding: 7px;
+  background: #FFFAEB;
+  border-radius: 5px;
+  clip-path: polygon(0 0, 100% 0, 100% calc(100% - 26px), calc(100% - 26px) 100%, 0 100%);
+}
+.sticker-curl {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  width: 30px;
+  height: 30px;
+  overflow: visible;
+  pointer-events: none;
+}
+.reveal-picture {
+  display: block;
+  width: 100%;
+  height: auto;
+  overflow: hidden;
+  border: 1px solid #B79350;
+  border-radius: 3px;
+  box-sizing: border-box;
+}
+.reveal-portrait { overflow: visible; }
+.reveal-picture .ghost-halo { animation: none; }
+.mist-tile { opacity: 1; transition: opacity .65s ease-out; }
+.mist-tile[data-open='true'] { opacity: 0; pointer-events: none; }
+.mist-tile[data-latest='true'] { animation: mist-lift .8s ease-out 1.3s both; }
+@keyframes mist-lift { from { opacity: 1; } to { opacity: 0; } }
+.collection-reward { color: #695235; }
+.warm-lamps[data-welcoming='true'] .warm-lamp { animation: lantern-welcome 1.8s ease-in-out both; }
+@keyframes lantern-welcome {
+  0%, 100% { filter: brightness(1); }
+  45% { filter: brightness(1.8) drop-shadow(0 0 5px #FFE5A1); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .mist-tile { transition: none; animation: none !important; }
+  .warm-lamps[data-welcoming='true'] .warm-lamp { animation: none; filter: brightness(1.35); }
+}

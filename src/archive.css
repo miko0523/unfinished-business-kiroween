@@ -1,0 +1,303 @@
+/*
+ * 纪念册：一本有点灰尘的旧书。封面薄灰；翻开时扬起几粒灰尘；内页一行两列盖章。
+ * 新送走的那只的章在灰尘散去之后最后落下，其余的早已在页上。减少动态下不扬灰、章直接在页上。
+ */
+
+.archive {
+  box-sizing: border-box;
+  width: 100%;
+  max-width: 680px;
+}
+
+.archive-back {
+  display: inline-flex;
+  align-items: center;
+  margin: 4px 0 12px;
+  text-decoration: none;
+}
+
+.book {
+  position: relative;
+  overflow: hidden;
+  border: 7px solid #58402a;
+  border-bottom-width: 12px;
+  border-radius: 14px 20px 18px 11px;
+  background:
+    radial-gradient(ellipse at 0 0, #b58a4d70, transparent 25%),
+    radial-gradient(ellipse at 100% 100%, #a7773b60, transparent 25%),
+    repeating-linear-gradient(8deg, #80592e07 0 1px, transparent 1px 4px),
+    #f1dfb0;
+  box-shadow: 0 4px 0 -1px #bca271, 0 7px 0 -1px #796346, 0 10px 28px #05081673;
+  animation: book-open .55s ease-out both;
+  transform-origin: 50% 85%;
+}
+
+/*
+ * The gutter belongs to a spread (heading + paired memorial pages), drawn behind the content so it never lies over
+ * the seals. The collection seals get a plain page without a gutter; the reveal sticker is pasted over the gutter.
+ */
+.book-spread {
+  position: relative;
+  isolation: isolate;
+}
+.book-spread::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background: linear-gradient(90deg, transparent 44%, #79552808 47%, #69461e38 49.4%, #4c341a55 50%, #fff3cf70 50.7%, #fff5d222 53%, transparent 57%);
+  /* The gutter fades out where the plain collection page begins. */
+  -webkit-mask-image: linear-gradient(180deg, #000 0, #000 88%, transparent 100%);
+  mask-image: linear-gradient(180deg, #000 0, #000 88%, transparent 100%);
+}
+.book-spread > * {
+  position: relative;
+  z-index: 1;
+}
+@keyframes book-open {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: none; }
+}
+
+.book-cover {
+  position: relative;
+  padding: 20px 24px 10px;
+  color: #715838;
+  background: transparent;
+}
+/* 薄薄的一层灰 */
+.book-cover::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(180deg, rgba(220, 215, 205, 0.22), rgba(220, 215, 205, 0.1));
+}
+
+.book-cover h2 {
+  position: relative;
+  z-index: 1;
+  margin: 0;
+  font-family: 'Iowan Old Style', 'Palatino Linotype', Palatino, Georgia, serif;
+  font-size: 1.15rem;
+  font-style: italic;
+  font-weight: 400;
+}
+
+.book-dust {
+  position: absolute;
+  inset: 0;
+  overflow: visible;
+  pointer-events: none;
+}
+.dust {
+  position: absolute;
+  bottom: 4px;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: rgba(228, 222, 210, 0.9);
+  opacity: 0;
+  animation: dust-puff 1.8s ease-out both;
+}
+@keyframes dust-puff {
+  0% {
+    opacity: 0;
+    transform: translate(0, 0) scale(0.6);
+  }
+  20% {
+    opacity: 0.85;
+  }
+  100% {
+    opacity: 0;
+    transform: translate(10px, -34px) scale(1.4);
+  }
+}
+
+.book-pages {
+  padding: 14px 18px 24px;
+  color: #3b2d1b;
+  background: transparent;
+}
+
+.archive-empty {
+  margin: 4px 0 8px;
+  font-size: 1rem;
+  line-height: 1.5;
+  text-align: center;
+  color: #6b5a3c;
+}
+
+/* 顶部的轻量目录：小书签一样的三个入口，窄屏可换行；用按钮和脚本滚动，不改 #/archive 这个地址。 */
+.archive-nav {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px 10px;
+  margin: 0;
+  padding: 2px 18px 6px;
+}
+.archive-nav-link {
+  min-width: 44px;
+  min-height: 44px;
+  padding: 0 14px;
+  font-family: 'Iowan Old Style', 'Palatino Linotype', Palatino, Georgia, serif;
+  font-size: 1rem;
+  font-style: italic;
+  line-height: 1.25;
+  color: #4a3820;
+  background: #fff6dccc;
+  border: 1.5px solid #8a6a3c;
+  border-radius: 999px;
+  box-shadow: none;
+  overflow-wrap: anywhere;
+}
+.archive-nav-link:hover { background: #fff0c4; color: #33250f; }
+.archive-nav-link:focus-visible { outline: 3px solid #7a540a; outline-offset: 2px; }
+
+.archive-entries h3 {
+  margin: 0 0 12px;
+  font-family: 'Iowan Old Style', Palatino, Georgia, serif;
+  font-size: 1.2rem;
+  font-weight: 400;
+  text-align: center;
+  color: #5A4326;
+}
+
+/* 两列，条目横排：小印章在左，右边紧凑地排日期那句、玩家的话和开关。字号不缩小，开关仍是 44px 高。 */
+.archive-list {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  column-gap: 28px;
+  row-gap: 14px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.archive-entry {
+  box-sizing: border-box;
+  display: grid;
+  grid-template-columns: 48px minmax(0, 1fr);
+  column-gap: 12px;
+  row-gap: 2px;
+  align-content: start;
+  align-items: start;
+  min-width: 0;
+  padding: 2px 0;
+  text-align: left;
+  background: transparent;
+  border: 0;
+  border-radius: 0;
+  font-family: 'Iowan Old Style', Palatino, Georgia, serif;
+}
+.archive-entry > :not(.archive-seal) {
+  grid-column: 2;
+  min-width: 0;
+}
+
+.archive-seal {
+  display: block;
+  grid-column: 1;
+  grid-row: 1 / span 4;
+  width: 48px;
+  height: 48px;
+}
+.archive-seal .stamp-seal {
+  animation: none;
+  opacity: 1;
+}
+.archive-entry[data-landing='true'] .stamp-seal {
+  /* 最新的一枚：等灰尘扬起之后最后落下 */
+  animation: seal-land 0.4s ease-out 1.2s both;
+}
+@keyframes seal-land {
+  from {
+    opacity: 0;
+    transform: translateY(-18px) scale(1.5);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.archive-entry p {
+  margin: 0;
+  font-size: 1rem;
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+}
+.archive-memo {
+  font-style: italic;
+  color: #5c4a2e;
+  /* 玩家自己的话：原样显示（包括换行），默认最多两行；真放不下时才出现“展开”。存档里的文字一个字也不改。 */
+  white-space: pre-line;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  overflow: hidden;
+}
+.archive-memo[data-expanded='true'] {
+  display: block;
+  overflow: visible;
+  -webkit-line-clamp: unset;
+  line-clamp: unset;
+}
+.archive-title-line {
+  font-weight: 600;
+}
+.archive-actions {
+  display: flex;
+  flex-wrap: wrap;
+  /* 按钮自己有左右 10px 的内边距；左移同样多，让按钮里的字和上面的文字对齐 */
+  margin-left: -10px;
+}
+.archive-title-toggle {
+  min-width: 44px;
+  min-height: 44px;
+  margin: 0;
+  padding: 0 10px;
+  font-family: inherit;
+  font-size: 1rem;
+  font-style: italic;
+  color: #715838;
+  background: transparent;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+  text-decoration: underline;
+  text-decoration-color: #71583866;
+  text-underline-offset: 4px;
+}
+.archive-title-toggle:hover { background: transparent; color: #44301b; }
+.archive-title-toggle:focus-visible { outline: 3px solid #3a2f22; outline-offset: 1px; }
+
+/* 很窄的屏：一列；两列各只剩一百多像素，横排放不下 */
+@media (max-width: 520px) {
+  .archive-list {
+    grid-template-columns: minmax(0, 1fr);
+    row-gap: 12px;
+  }
+}
+@media (max-width: 420px) {
+  .book-pages {
+    padding: 10px 12px;
+  }
+  .archive-nav { padding: 2px 12px 6px; }
+  .book { border-width: 4px; border-bottom-width: 8px; }
+  .book-cover { padding: 18px 14px 8px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .book { animation: none; }
+  .dust {
+    display: none;
+  }
+  .archive-entry[data-landing='true'] .stamp-seal {
+    animation: none;
+    opacity: 1;
+  }
+}

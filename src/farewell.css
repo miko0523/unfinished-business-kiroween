@@ -1,0 +1,242 @@
+/* ---------- 庆祝层 ---------- */
+
+.celebration {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.celebration-ghost {
+  position: absolute;
+}
+
+.celebration-ghost .ghost-sprite {
+  width: 100%;
+  height: 100%;
+}
+
+.celebration-ghost.is-gold {
+  animation: gold-flash 1s ease-out both;
+}
+
+.celebration-ghost .ghost-sprite .ghost-hand {
+  transform-box: view-box;
+}
+
+.celebration-ghost.is-waving .ghost-hand-right {
+  transform-origin: 121px 120px;
+  animation: wave-hand 0.45s ease-in-out 2 alternate;
+}
+
+/* 盖章：靠章那一侧的小手抬起来（章本身在纪念卡外侧落下，不压在身体上） */
+.celebration-ghost.is-stamping .ghost-hand-right {
+  transform-origin: 121px 120px;
+  animation: stamp-hand 0.9s ease-in-out both;
+}
+@keyframes stamp-hand {
+  0% { transform: rotate(0); }
+  25% { transform: rotate(-85deg); }
+  45% { transform: rotate(-65deg); }
+  100% { transform: rotate(-85deg); }
+}
+
+@keyframes gold-flash {
+  0% { transform: scale(0.94); filter: brightness(1.15) drop-shadow(0 0 4px #ffd86b); }
+  55% { transform: scale(1.06); filter: brightness(1.12) drop-shadow(0 0 14px #ffd86b); }
+  100% { transform: scale(1); filter: brightness(1) drop-shadow(0 0 8px #ffd86b); }
+}
+@keyframes wave-hand {
+  from { transform: rotate(-10deg); }
+  to { transform: rotate(-55deg); }
+}
+
+.stamp-page {
+  position: absolute;
+  box-sizing: border-box;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  gap: 4px 6px;
+  width: 160px;
+  padding: 8px 10px;
+  color: #3b2d00;
+  text-align: left;
+  background: #fff5d6;
+  border: 2px solid #c9972b;
+  border-radius: 8px;
+}
+.stamp-page p {
+  margin: 0;
+  font-size: 1rem;
+  line-height: 1.3;
+  overflow-wrap: anywhere;
+}
+.stamp-memo {
+  grid-column: 1 / -1;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  overflow: hidden;
+}
+.stamp-mark {
+  font-weight: 700;
+  color: #8b2f25;
+}
+.stamp-slot {
+  position: relative;
+  display: block;
+  width: 32px;
+  height: 32px;
+}
+.stamp-seal {
+  display: block;
+  width: 100%;
+  height: 100%;
+  animation: stamp-seal-in 0.2s ease-out 0.36s both;
+}
+@keyframes stamp-seal-in {
+  from { opacity: 0; transform: scale(1.35); }
+  to { opacity: 1; transform: scale(1); }
+}
+/* 紧凑排版：窄屏下墙面很矮，字与印都缩一点，仍是一张完整的小卡 */
+.stamp-page[data-compact='true'] {
+  padding: 4px 5px;
+  gap: 2px 4px;
+  border-width: 1.5px;
+}
+/* 紧凑排版也保持 16px 的字（R11.7）：卡片改成上下排版，字在上、章在下。 */
+.stamp-page[data-compact='true'] p {
+  font-size: 1rem;
+  line-height: 1.2;
+}
+.stamp-page[data-compact='true'] .stamp-memo {
+  -webkit-line-clamp: 1;
+  line-clamp: 1;
+}
+.stamp-page[data-compact='true'] .stamp-slot {
+  width: 24px;
+  height: 24px;
+}
+
+.skip-animation {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  pointer-events: auto;
+}
+
+
+.stamp-page {
+  /* 章落下的位置 */
+  overflow: visible;
+}
+.stamp-tool {
+  position: absolute;
+  inset: 0;
+  display: block;
+  animation: stamp-drop 0.3s ease-in 0.06s both;
+}
+.stamp-tool-head {
+  position: absolute;
+  left: 15%;
+  right: 15%;
+  bottom: 10%;
+  height: 34%;
+  background: #b5473a;
+  border-radius: 3px;
+}
+.stamp-tool-grip {
+  position: absolute;
+  left: 38%;
+  right: 38%;
+  top: 6%;
+  bottom: 40%;
+  background: #8b6b43;
+  border-radius: 3px;
+}
+@keyframes stamp-drop {
+  0% { opacity: 0; transform: translateY(-12px); }
+  35% { opacity: 1; }
+  80% { opacity: 1; transform: translateY(1px); }
+  100% { opacity: 0; transform: translateY(0); }
+}
+.stamp-star {
+  position: absolute;
+  top: -10px;
+  right: -8px;
+  width: 16px;
+  height: 16px;
+  fill: #ffe9a0;
+  stroke: #e3b94a;
+  stroke-width: 0.12;
+  opacity: 0;
+  --dx: 4px;
+  --dy: -8px;
+  animation: star-float 0.9s ease-in-out 0.36s both;
+}
+
+/* 飞进纪念册：盖完章，小幽灵化成一颗星星，沿弧线飞向门厅桌上的大书，身后拖着几颗渐淡的小星 */
+.celebration-ghost {
+  transform-origin: 50% 69.4%;
+}
+.celebration-trail {
+  position: absolute;
+  transform-origin: 50% 69.4%;
+}
+.fly-star,
+.fly-trail {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  fill: #ffd86b;
+  stroke: #e0a830;
+  stroke-width: 0.08;
+  filter: drop-shadow(0 0 6px rgba(255, 216, 107, 0.9));
+}
+.fly-trail {
+  filter: drop-shadow(0 0 3px rgba(255, 216, 107, 0.7));
+}
+.celebration-ghost .fly-star {
+  transform-origin: 50% 69.4%;
+  animation: fly-star-in 0.4s ease-out both;
+}
+.celebration-ghost.is-fly .ghost-sprite {
+  animation: fly-ghost-out 0.4s ease-out both;
+}
+@keyframes fly-star-in {
+  from { opacity: 0; transform: scale(0.4); }
+  to { opacity: 1; transform: scale(1); }
+}
+@keyframes fly-ghost-out {
+  from { opacity: 1; transform: scale(1); }
+  to { opacity: 0; transform: scale(0.55); }
+}
+
+/* 书页亮一下（飞行的最后 0.5 秒） */
+.archive-book[data-glow='true'] {
+  animation: book-glow 0.8s ease-out both;
+  box-shadow: 0 0 26px 10px rgba(255, 214, 120, 0.45);
+}
+@keyframes book-glow {
+  from { box-shadow: 0 0 0 0 rgba(255, 214, 120, 0); }
+  50% { box-shadow: 0 0 34px 16px rgba(255, 214, 120, 0.6); }
+  to { box-shadow: 0 0 26px 10px rgba(255, 214, 120, 0.45); }
+}
+
+/* 减少动态：章与字直接显示，没有星星和飞行 */
+@media (prefers-reduced-motion: reduce) {
+  .celebration-ghost,
+  .celebration-ghost .ghost-hand-right,
+  .stamp-tool,
+  .stamp-seal,
+  .archive-book[data-glow='true'] {
+    animation: none !important;
+  }
+  .stamp-star,
+  .stamp-tool {
+    display: none;
+  }
+}

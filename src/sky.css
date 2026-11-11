@@ -1,0 +1,83 @@
+/* 夜空：固定在页面后面，只做氛围。星点不闪，萤火只用 transform 慢慢漂（周期 ≥6 秒），亮度恒定。 */
+
+.night-sky {
+  position: relative;
+  isolation: isolate;
+  background: transparent;
+}
+
+.sky {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  overflow: hidden;
+  pointer-events: none;
+  background: linear-gradient(180deg, #070d24 0%, #0d1530 45%, #172447 100%);
+}
+
+.sky-stars {
+  position: absolute;
+  inset: 0 0 30% 0;
+  width: 100%;
+  height: 70%;
+}
+
+.sky-moon {
+  position: absolute;
+  top: 7%;
+  right: 12%;
+  width: 54px;
+  height: 54px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 36% 34%, #fff8dc 0%, #f3e3a8 60%, #d9c27c 100%);
+  box-shadow: 0 0 28px 8px rgba(255, 240, 190, 0.25);
+}
+
+@media (max-width: 899px) {
+  .sky-moon {
+    top: 12px;
+    right: 10px;
+    width: 32px;
+    height: 32px;
+  }
+}
+
+.sky-trees {
+  position: absolute;
+  bottom: 0;
+  width: min(7vw, 90px);
+  height: min(28vh, 280px);
+  opacity: 0.7;
+}
+.sky-trees-left {
+  left: 0;
+}
+.sky-trees-right {
+  right: 0;
+  transform: scaleX(-1);
+}
+
+.firefly {
+  position: absolute;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: radial-gradient(circle, #f6ffb0 0%, rgba(214, 255, 120, 0.55) 45%, rgba(214, 255, 120, 0) 72%);
+  opacity: 0.85;
+  animation: firefly-drift 10s ease-in-out infinite alternate;
+}
+
+@keyframes firefly-drift {
+  from {
+    transform: translate(0, 0);
+  }
+  to {
+    transform: translate(var(--dx), var(--dy));
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .firefly {
+    animation: none;
+  }
+}

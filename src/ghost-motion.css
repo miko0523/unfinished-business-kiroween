@@ -1,0 +1,372 @@
+/*
+ * Ghost 的动态：平时安静，事件才热闹。只动 transform 与 opacity（颜色/光晕用淡入淡出）。
+ * 家务整套 2 秒、橡皮擦 1.5 秒，时间轴百分比与 animation/choreography.ts 的时长对应：改时长要两边一起改。
+ * 道具与特效都画在身体外侧的右边一栏（身体做家务时向左让出 16 个单位），不压脸。
+ */
+
+.ghost-play {
+  display: block;
+  width: 100%;
+  height: 100%;
+  transform-origin: 50% 100%;
+}
+
+.ghost-sprite .ghost-prop,
+.ghost-sprite .ghost-hand,
+.ghost-shift,
+.ghost-lean,
+.ghost-tilt {
+  transform-box: view-box;
+}
+
+/* ---------- 平时：明显而慢的漂浮，光晕缓缓呼吸，不撒粒子 ---------- */
+
+.ghost-play[data-anim='none'] .ghost-sprite {
+  transform-origin: 50% 100%;
+  animation: ghost-float 5s ease-in-out infinite alternate;
+}
+.ghost-button[data-slot='1'] .ghost-play[data-anim='none'] .ghost-sprite {
+  animation-delay: -2.5s;
+  animation-duration: 5.6s;
+}
+@keyframes ghost-float {
+  from { transform: translateY(2%) rotate(-1.6deg); }
+  to { transform: translateY(-6.5%) rotate(1.6deg); }
+}
+
+.ghost-halo {
+  transform-box: fill-box;
+  transform-origin: 50% 60%;
+}
+.ghost-play[data-anim='none'] .ghost-halo {
+  animation: halo-idle 5.6s ease-in-out infinite alternate;
+}
+@keyframes halo-idle {
+  from { opacity: 0.72; transform: scale(0.94); }
+  to { opacity: 1; transform: scale(1.06); }
+}
+
+/* Pending：金边缓慢呼吸，光晕也略微起伏。 */
+.ghost-ring {
+  animation: ring-pulse 2.4s ease-in-out infinite alternate;
+  filter: drop-shadow(0 0 3px rgba(255, 208, 90, 0.9));
+}
+.ghost-button[data-pending='true'] .ghost-halo {
+  animation: halo-breathe 2.6s ease-in-out infinite alternate;
+}
+@keyframes ring-pulse {
+  from { opacity: 0.6; }
+  to { opacity: 1; }
+}
+@keyframes halo-breathe {
+  from { opacity: 0.7; }
+  to { opacity: 1; }
+}
+
+/* 颜色与光晕的变化淡入淡出，状态切换时看得出来。 */
+.ghost-body,
+.ghost-hand ellipse {
+  transition: fill 0.8s ease, stroke 0.8s ease, d 0.35s ease-out;
+}
+.ghost-figure {
+  transition: opacity 0.8s ease, transform 0.8s ease;
+}
+
+/* ---------- 走路：脸朝前、身体微前倾、裙边往后飘；停下回正，垂直移动不挪 ---------- */
+
+.ghost-lean,
+.ghost-tilt {
+  transform-origin: 70px 176px;
+}
+.ghost-lean {
+  transition: transform 0.35s ease-out;
+}
+.ghost-face {
+  transition: transform 0.35s ease-out;
+}
+.ghost-button[data-walk='1'] .ghost-lean { transform: rotate(4deg); }
+.ghost-button[data-walk='1'] .ghost-face { transform: translateX(9.7px); }
+.ghost-button[data-walk='-1'] .ghost-lean { transform: rotate(-4deg); }
+.ghost-button[data-walk='-1'] .ghost-face { transform: translateX(-9.7px); }
+
+/* ---------- 做家务：身体向左让位，道具与特效在右边一栏 ---------- */
+
+.ghost-shift {
+  transition: transform 0.3s ease-out;
+}
+.ghost-sprite[data-tool='true'] .ghost-shift {
+  transform: translateX(-16px);
+}
+
+.ghost-hand-right {
+  transform-origin: 121px 120px;
+}
+
+.ghost-play[data-anim='clarify'] {
+  animation: perk 0.9s ease-in-out both;
+}
+.ghost-play[data-anim='clarify'] .ghost-halo {
+  animation: halo-bloom 1.2s ease-out both;
+}
+@keyframes perk {
+  0% { transform: scale(1); }
+  35% { transform: scale(1.14, 0.92); }
+  65% { transform: scale(0.96, 1.1) translateY(-6%); }
+  100% { transform: scale(1); }
+}
+@keyframes halo-bloom {
+  0% { opacity: 0.2; transform: scale(0.8); }
+  45% { opacity: 1; transform: scale(1.3); }
+  100% { opacity: 1; transform: scale(1); }
+}
+
+/*
+ * 靠道具那一侧的小手（右手）整只抬向道具的握持点：手臂太短，只绕肩膀转动上不去，
+ * 所以关键帧用 translate 把手移到握持点（坐标是图形局部单位，绿色缩放 0.854 下 1 单位约 0.854 个 viewBox 单位），
+ * 再随道具的节奏小幅摆动。握持点见 animation/choreography.ts 的 GRIP，e2e 逐帧量手的真实位置。
+ */
+.ghost-sprite .ghost-hand-right {
+  transform-box: fill-box;
+  transform-origin: center;
+}
+
+/* 扫地：拿起扫把，左右扫三下，扬起几粒灰，灰变成小星星（星星在 burst 里接上） */
+.ghost-play[data-anim='sweep'] .ghost-prop { transform-origin: 125px 160px; animation: prop-sweep 2s ease-in-out both; }
+.ghost-play[data-anim='sweep'] .ghost-tilt { animation: tilt-sweep 2s ease-in-out both; }
+.ghost-play[data-anim='sweep'] .ghost-hand-right { animation: hand-sweep 2s ease-in-out both; }
+@keyframes prop-sweep {
+  0% { opacity: 0; transform: translateX(6px); }
+  10% { opacity: 1; transform: translateX(0) rotate(0); }
+  18% { transform: translateX(-3px) rotate(-3deg); }
+  30% { transform: translateX(3px) rotate(3deg); }
+  42% { transform: translateX(-3px) rotate(-3deg); }
+  54% { transform: translateX(3px) rotate(3deg); }
+  66% { transform: translateX(-3px) rotate(-3deg); }
+  78% { transform: translateX(3px) rotate(3deg); }
+  88% { opacity: 1; transform: translateX(0) rotate(0); }
+  100% { opacity: 0; transform: translateX(0) rotate(0); }
+}
+@keyframes tilt-sweep {
+  0% { transform: rotate(0); }
+  18% { transform: rotate(1deg); }
+  30% { transform: rotate(6deg); }
+  42% { transform: rotate(1deg); }
+  54% { transform: rotate(6deg); }
+  66% { transform: rotate(1deg); }
+  78% { transform: rotate(6deg); }
+  88% { transform: rotate(2deg); }
+  100% { transform: rotate(0); }
+}
+@keyframes hand-sweep {
+  0% { transform: translate(0, 0); }
+  10% { transform: translate(24.8px, -32px); }
+  18% { transform: translate(21.3px, -32px); }
+  30% { transform: translate(28.3px, -32px); }
+  42% { transform: translate(21.3px, -32px); }
+  54% { transform: translate(28.3px, -32px); }
+  66% { transform: translate(21.3px, -32px); }
+  78% { transform: translate(28.3px, -32px); }
+  88% { transform: translate(24.8px, -32px); }
+  100% { transform: translate(0, 0); }
+}
+.fx-dust { fill: #b9b2a6; opacity: 0; animation: dust-rise 0.7s ease-out both; }
+@keyframes dust-rise {
+  0% { opacity: 0; transform: translateY(0); }
+  30% { opacity: 0.85; }
+  100% { opacity: 0; transform: translateY(-14px); }
+}
+
+/* 浇花：歪着小水壶（绕握把倾倒），三滴水落进花盆，盆里冒一个小芽 */
+.ghost-play[data-anim='water'] .ghost-prop { transform-origin: 110px 105px; animation: prop-water 2s ease-in-out both; }
+.ghost-play[data-anim='water'] .ghost-tilt { animation: tilt-water 2s ease-in-out both; }
+.ghost-play[data-anim='water'] .ghost-hand-right { animation: hand-water 2s ease-in-out both; }
+@keyframes prop-water {
+  0% { opacity: 0; transform: translateX(6px) rotate(0); }
+  10% { opacity: 1; transform: translateX(0) rotate(0); }
+  28% { transform: rotate(46deg); }
+  40% { transform: rotate(43deg); }
+  52% { transform: rotate(47deg); }
+  62% { transform: rotate(46deg); }
+  74% { transform: rotate(0); }
+  90% { opacity: 1; }
+  100% { opacity: 0; transform: rotate(0); }
+}
+@keyframes tilt-water {
+  0% { transform: rotate(0); }
+  12% { transform: rotate(3deg); }
+  28% { transform: rotate(10deg); }
+  62% { transform: rotate(10deg); }
+  74% { transform: rotate(4deg); }
+  100% { transform: rotate(0); }
+}
+@keyframes hand-water {
+  0% { transform: translate(0, 0) rotate(0); }
+  10% { transform: translate(8.4px, -36.7px) rotate(0); }
+  28% { transform: translate(8.4px, -34.7px) rotate(20deg); }
+  62% { transform: translate(8.4px, -34.7px) rotate(20deg); }
+  74% { transform: translate(8.4px, -36.7px) rotate(0); }
+  88% { transform: translate(8.4px, -36.7px) rotate(0); }
+  100% { transform: translate(0, 0) rotate(0); }
+}
+.fx-drop { fill: #7fb3d5; opacity: 0; animation: drop-fall 0.42s ease-in both; }
+@keyframes drop-fall {
+  0% { opacity: 0; transform: translateY(0); }
+  15% { opacity: 1; }
+  100% { opacity: 0; transform: translateY(28px); }
+}
+.fx-sprout { transform-box: view-box; transform-origin: 130px 150px; animation: sprout-grow 2s ease-out both; }
+@keyframes sprout-grow {
+  0%, 60% { transform: scale(0); }
+  78% { transform: scale(1.12); }
+  86%, 100% { transform: scale(1); }
+}
+
+/* 擦窗：小幽灵略飘高到窗旁，抹布在窗上画两个圈，窗玻璃闪过一道亮光 */
+.ghost-play[data-anim='window'] .ghost-prop { animation: prop-window 2s ease-in-out both; }
+.ghost-play[data-anim='window'] .ghost-tilt { transform-origin: 70px 176px; animation: tilt-window 2s ease-in-out both; }
+.ghost-play[data-anim='window'] .ghost-hand-right { animation: hand-window 2s ease-in-out both; }
+@keyframes prop-window {
+  0% { opacity: 0; transform: translate(-10px, 18px); }
+  12% { opacity: 1; transform: translate(5px, 0); }
+  20% { transform: translate(0, 5px); }
+  28% { transform: translate(-5px, 0); }
+  36% { transform: translate(0, -5px); }
+  44% { transform: translate(5px, 0); }
+  52% { transform: translate(0, 5px); }
+  60% { transform: translate(-5px, 0); }
+  68% { transform: translate(0, -5px); }
+  76% { transform: translate(5px, 0); }
+  84% { opacity: 1; transform: translate(0, 0); }
+  100% { opacity: 0; transform: translate(0, 0); }
+}
+@keyframes tilt-window {
+  0% { transform: translateY(0) rotate(0) scaleY(1); }
+  12% { transform: translateY(-10px) rotate(2deg) scaleY(0.97); }
+  28% { transform: translateY(-10px) rotate(4deg) scaleY(1.03); }
+  44% { transform: translateY(-10px) rotate(2deg) scaleY(0.97); }
+  60% { transform: translateY(-10px) rotate(4deg) scaleY(1.03); }
+  76% { transform: translateY(-10px) rotate(2deg) scaleY(0.97); }
+  90% { transform: translateY(-4px) rotate(1deg) scaleY(1); }
+  100% { transform: translateY(0) rotate(0) scaleY(1); }
+}
+@keyframes hand-window {
+  0% { transform: translate(0, 0); }
+  12% { transform: translate(19px, -60px); }
+  20% { transform: translate(13.1px, -54.1px); }
+  28% { transform: translate(7.2px, -60px); }
+  36% { transform: translate(13.1px, -65.9px); }
+  44% { transform: translate(19px, -60px); }
+  52% { transform: translate(13.1px, -54.1px); }
+  60% { transform: translate(7.2px, -60px); }
+  68% { transform: translate(13.1px, -65.9px); }
+  76% { transform: translate(19px, -60px); }
+  84% { transform: translate(13.1px, -60px); }
+  100% { transform: translate(0, 0); }
+}
+.fx-ring { opacity: 0; }
+.fx-ring-1 { animation: ring-draw-1 2s ease-in-out both; }
+.fx-ring-2 { animation: ring-draw-2 2s ease-in-out both; }
+@keyframes ring-draw-1 {
+  0%, 18% { opacity: 0; }
+  44%, 100% { opacity: 0.9; }
+}
+@keyframes ring-draw-2 {
+  0%, 50% { opacity: 0; }
+  76%, 100% { opacity: 0.9; }
+}
+.fx-glint { opacity: 0; animation: glint-pass 2s ease-in-out both; }
+@keyframes glint-pass {
+  0%, 66% { opacity: 0; transform: translateX(-4px); }
+  78% { opacity: 0.95; transform: translateX(0); }
+  92%, 100% { opacity: 0; transform: translateX(4px); }
+}
+
+/* 场景（花盆、小窗、灰、水滴）整体淡入淡出，收尾轻轻消失 */
+.fx-water, .fx-window { animation: scene-fade 2s linear both; }
+@keyframes scene-fade {
+  0% { opacity: 0; }
+  8%, 88% { opacity: 1; }
+  100% { opacity: 0; }
+}
+
+/* 取消勾选：掏出小橡皮擦两下，掉几粒灰屑 */
+.ghost-play[data-anim='erase'] .ghost-prop { animation: prop-erase 1.5s ease-in-out both; }
+.ghost-play[data-anim='erase'] .ghost-tilt { animation: tilt-erase 1.5s ease-in-out both; }
+.ghost-play[data-anim='erase'] .ghost-hand-right { animation: hand-erase 1.5s ease-in-out both; }
+@keyframes prop-erase {
+  0% { opacity: 0; transform: translateX(6px); }
+  12% { opacity: 1; transform: translateX(0); }
+  24% { transform: translateX(-6px); }
+  38% { transform: translateX(2px); }
+  52% { transform: translateX(-6px); }
+  66% { transform: translateX(2px); }
+  80% { opacity: 1; transform: translateX(5px); }
+  100% { opacity: 0; transform: translateX(5px); }
+}
+@keyframes tilt-erase {
+  0% { transform: rotate(0); }
+  24% { transform: rotate(-3deg); }
+  38% { transform: rotate(2deg); }
+  52% { transform: rotate(-3deg); }
+  66% { transform: rotate(2deg); }
+  100% { transform: rotate(0); }
+}
+@keyframes hand-erase {
+  0% { transform: translate(0, 0); }
+  12% { transform: translate(13.1px, -28.5px); }
+  24% { transform: translate(6.1px, -28.5px); }
+  38% { transform: translate(15.4px, -28.5px); }
+  52% { transform: translate(6.1px, -28.5px); }
+  66% { transform: translate(15.4px, -28.5px); }
+  80% { transform: translate(19px, -28.5px); }
+  100% { transform: translate(0, 0); }
+}
+.fx-crumb { fill: #a9a39a; opacity: 0; animation: crumb-fall 0.6s ease-in both; }
+@keyframes crumb-fall {
+  0% { opacity: 0; transform: translate(0, 0); }
+  20% { opacity: 0.85; }
+  100% { opacity: 0; transform: translate(1px, 16px); }
+}
+
+/* ---------- 小星星：淡入、飘散、淡出，单颗不短于 0.9 秒，不闪 ---------- */
+
+.fx-star { transform-box: fill-box; transform-origin: center; opacity: 0; animation: star-float 1.2s ease-in-out both; }
+.fx-star path { fill: #ffe9a0; stroke: #e3b94a; stroke-width: 0.14; stroke-linejoin: round; }
+@keyframes star-float {
+  0% { opacity: 0; transform: translate(0, 0) scale(0.5); }
+  22% { opacity: 1; transform: translate(calc(var(--dx) * 0.25), calc(var(--dy) * 0.25)) scale(1); }
+  65% { opacity: 0.95; transform: translate(calc(var(--dx) * 0.7), calc(var(--dy) * 0.7)) scale(0.95); }
+  100% { opacity: 0; transform: translate(var(--dx), var(--dy)) scale(0.7); }
+}
+
+/* ---------- 页面隐藏：装饰动态全部暂停 ---------- */
+
+html[data-page-hidden] *,
+html[data-page-hidden] *::before,
+html[data-page-hidden] *::after {
+  animation-play-state: paused !important;
+}
+
+/* ---------- 减少动态：没有漂浮、漫游、粒子、拖尾和手脚动作，只留颜色与静态表情 ---------- */
+
+@media (prefers-reduced-motion: reduce) {
+  .ghost-play,
+  .ghost-play *,
+  .ghost-sprite,
+  .ghost-ring,
+  .ghost-halo,
+  .fx-star {
+    animation: none !important;
+  }
+  .ghost-lean,
+  .ghost-face,
+  .ghost-shift,
+  .ghost-body,
+  .ghost-hand ellipse,
+  .ghost-figure {
+    transition: none !important;
+  }
+  .ghost-halo {
+    transform: none !important;
+  }
+}
