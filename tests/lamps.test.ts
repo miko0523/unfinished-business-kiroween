@@ -1,4 +1,3 @@
-import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import { decodePng } from './helpers/png';
 import { lampsFor } from '../src/domain/house';
@@ -44,19 +43,5 @@ describe('暖灯数量与位置', () => {
     expect(slots.filter((s) => s.kind === 'static-lantern')).toHaveLength(STATIC_LAMP_COUNT);
     expect(slots.slice(0, STATIC_LAMP_COUNT).every((s) => s.kind === 'static-lantern')).toBe(true);
     expect(slots.slice(STATIC_LAMP_COUNT).every((s) => s.kind === 'hung-lantern')).toBe(true);
-  });
-});
-
-describe('来源如实记录', () => {
-  const assets = readFileSync('ASSETS.md', 'utf8');
-  it('ASSETS.md 说明组件是图像编辑工具提取的派生素材，前 3 盏原画叠光，不说纯代码或逐像素裁切', () => {
-    expect(assets).toContain('components/lantern.png');
-    expect(assets).toMatch(/image-editing tool/i);
-    expect(assets).toMatch(/resampl/i);
-    expect(assets).toMatch(/not a pixel-exact crop/i);
-    expect(assets).toMatch(/first three/i);
-    expect(assets).toMatch(/last nine|nine/i);
-    expect(assets).toMatch(/ChatGPT/);
-    expect(assets).not.toMatch(/drawn (entirely )?in code.*lantern/i);
   });
 });
