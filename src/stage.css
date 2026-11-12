@@ -102,6 +102,12 @@
     grid-row: 4;
   }
 
+  /* 左列只有 320px：输入框独占一行、按钮换到下一行，别把输入框挤成一小截（左列竖向空间够）。 */
+  .night-sky:has(.house-view:not([hidden])) .create-row input,
+  .night-sky:has(.house-view:not([hidden])) .create-row button {
+    flex: 1 1 100%;
+  }
+
   .night-sky:has(.house-view:not([hidden])) > .app-footer {
     grid-column: 1;
     grid-row: 5;

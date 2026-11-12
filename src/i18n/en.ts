@@ -9,7 +9,7 @@ export const en: CopyTable = {
   'language.markZh': '中',
   'sound.label': 'Music and sounds',
   'create.label': "What's waiting?",
-  'create.placeholder': 'A few words are enough',
+  'create.placeholder': 'A few words',
   'create.submit': 'Welcome a little ghost',
   'create.error.empty': 'Give the little ghost a few words first, between 1 and {max} characters.',
   'create.error.tooLong': 'That is {length} characters, and a title can hold up to {max}. A few fewer words will do.',
