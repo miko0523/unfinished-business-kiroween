@@ -151,4 +151,36 @@ test.describe('子路径 /unfinished-business/', () => {
     expect(bad).toEqual([]);
     expect(errors).toEqual([]);
   });
+
+  // GitHub Pages 的真实地址在子路径下：内嵌音频模块必须留在前缀内并能真正起播。
+  test('声音：在子路径下打开，内嵌音频模块从前缀内延迟加载（无 4xx），进入播放状态', async ({ page }) => {
+    const audioModules: { url: string; status: number; type: string }[] = [];
+    const bad: string[] = [];
+    const errors: string[] = [];
+    page.on('response', (r) => {
+      if (r.status() >= 400) bad.push(`${r.status()} ${r.url()}`);
+      if (/\/assets\/embeddedAudio-[^/]+\.js(?:\?|$)/.test(r.url())) {
+        audioModules.push({ url: r.url(), status: r.status(), type: r.headers()['content-type'] ?? '' });
+      }
+    });
+    page.on('pageerror', (e) => errors.push(String(e)));
+
+    await ready(page, origin + SUBPATH_PREFIX);
+    const sw = page.getByRole('button', { name: 'Music and sounds' });
+    await expect(sw).toHaveAttribute('data-sound-state', 'off');
+    await sw.click();
+    await expect(sw).toHaveAttribute('data-sound-state', 'playing', { timeout: 15_000 });
+    await expect(sw).toHaveAttribute('aria-pressed', 'true');
+    await expect.poll(() => audioModules.length, { timeout: 10_000 }).toBe(1);
+
+    for (const a of audioModules) {
+      const url = new URL(a.url);
+      expect(url.origin, a.url).toBe(origin);
+      expect(url.pathname.startsWith(`${SUBPATH_PREFIX}assets/embeddedAudio-`), a.url).toBe(true);
+      expect(a.status, a.url).toBe(200);
+      expect(a.type, a.url).toMatch(/javascript/);
+    }
+    expect(bad).toEqual([]);
+    expect(errors).toEqual([]);
+  });
 });

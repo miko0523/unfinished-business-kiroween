@@ -28,6 +28,7 @@ English and 简体中文 are both built in. Everything stays in your browser: no
 - **Confirm by hand.** Nothing is ever completed automatically. Confirming asks for an optional short note, then the ghost is stamped into the memorial book.
 - **Memorial book and warm lamps.** Titles are hidden in the book by default; you can show or hide each one. Each confirmed ghost lights one of twelve warm lamps in the lobby. Moving a ghost out quietly (deleting it) leaves no memorial and does not light a lamp. Each memorial is a compact row with a small seal; a long note shows two lines with a Read more button, and three buttons at the top of the book jump to the entries, the keepsake stamps and the friend in the mist.
 - **Keepsake collection.** The twelve stamps you earn form a small collection, and a picture of a ghost is gradually revealed. After the twelfth, the next ghost to move in carries a lantern (once guaranteed, then now and then by chance).
+- **Optional music and sounds, off by default.** A small speaker button at the top turns on a quiet looping music-box tune and soft sounds for moving in, chores, the stamp and the lamp. The page never makes a sound on its own: sound starts off every time you open or refresh the page, and only the speaker button turns it on or off.
 - **Try sample.** A sandbox ghost shows how everything works; it never touches your real notebook.
 - **Accessible and calm.** Keyboard operable, landmarks and polite live announcements, 44px touch targets, 16px minimum text, and a real "reduce motion" mode that follows your system setting.
 
@@ -54,7 +55,7 @@ npm run test:e2e           # builds, starts a preview server and runs the browse
 
 Tips: the browser tests are thorough and take a while; `npm run test:e2e -- --workers=1` runs them one at a time and is gentler on a laptop. `npm test -- --maxWorkers=1` does the same for Vitest. `npm run release:check` runs the pre-publication checks described below.
 
-The property tests cover the 27 correctness properties written in `.kiro/specs/unfinished-business/design.md`; `tests/property-coverage.test.ts` checks that each has a labelled test with at least 100 runs.
+The property tests cover the 33 correctness properties written in `.kiro/specs/unfinished-business/design.md`; `tests/property-coverage.test.ts` checks that each has a labelled test with at least 100 runs.
 
 ## Deploying (static hosting, including a sub-path)
 
@@ -74,7 +75,7 @@ There is no service worker. After the first screen is drawn, the page quietly pr
 
 ## Your data
 
-Everything lives in your browser's `localStorage`: `ub:save` holds the notebook (JSON, `schema_version` 1). If the saved text cannot be read, the app does not guess: it opens a recovery screen with three choices (keep a copy of the old text, carry on with a blank page without saving, or back the old text up under a new `ub:backup:N` key and start fresh). The old text is never overwritten until a verified backup exists.
+Everything lives in your browser's `localStorage`: `ub:save` holds the notebook (JSON, `schema_version` 1). If the saved text cannot be read, the app does not guess: it opens a recovery screen with three choices (keep a copy of the old text, carry on with a blank page without saving, or back the old text up under a new `ub:backup:N` key and start fresh). The old text is never overwritten until a verified backup exists. The sound switch is not stored at all: it applies to the open page only, so every visit starts with sound off, and it is never part of the notebook or the exported copy.
 
 - **Keep a copy** (top of the page) downloads `unfinished-business-<date>.json` with all your words: titles, steps, notes and the memorial book. There is no import feature.
 - **Private by default.** Titles are hidden in the memorial book unless you choose to show them. Anyone with access to the same browser profile can read the saved notebook, so use a private profile on shared computers.
@@ -84,7 +85,9 @@ Everything lives in your browser's `localStorage`: `ub:save` holds the notebook 
 
 The ghost, the night sky, the warm lamps, the keepsake stamps and the celebration are drawn in code with SVG and CSS. The old-house scenery (roof, lobby, five floor modules and the lantern component) consists of image files, described in [`ASSETS.md`](ASSETS.md) together with the data files that go with them.
 
-The code is released under the [MIT License](LICENSE). That licence covers the source code; see `ASSETS.md` for the status of the scenery images.
+The background music and sound effects are generated media embedded in a lazily loaded application module. The repository and build do not publish them as standalone audio files; their source and use are recorded in `ASSETS.md`.
+
+The code is released under the [MIT License](LICENSE). That licence covers the source code only; the generated scenery and audio are shipped with the project but are not additionally licensed under MIT.
 
 Dependencies:
 
@@ -96,7 +99,7 @@ Dependencies:
 | vitest, @testing-library/preact, happy-dom, fast-check | 5.1.0, 3.2.6, 21.0.4, 4.10.2 | MIT | unit, component and property tests |
 | @playwright/test | 1.65.0 | Apache-2.0 | browser tests |
 
-The runtime code in `dist/` is MIT-licensed (preact and this project's own code); the scenery images are described separately in [`ASSETS.md`](ASSETS.md). `npm run release:check` also lists every transitive dependency's licence. Two build-time-only transitive packages are outside the MIT/ISC/Apache/BSD set: `lightningcss` (MPL-2.0, used by the build tool Vite) and `caniuse-lite` (CC-BY-4.0, browser-support data). Neither is included in `dist/` or in this repository, and `npm run release:check` lists them separately as unpublished build-time dependencies.
+The runtime dependencies in `dist/` are MIT-licensed; the generated scenery and embedded audio are described separately in [`ASSETS.md`](ASSETS.md). `npm run release:check` also lists every transitive dependency's licence. Two build-time-only transitive packages are outside the MIT/ISC/Apache/BSD set: `lightningcss` (MPL-2.0, used by the build tool Vite) and `caniuse-lite` (CC-BY-4.0, browser-support data). Neither is included in `dist/` or in this repository, and `npm run release:check` lists them separately as unpublished build-time dependencies.
 
 ## Regenerating the screenshots
 
@@ -112,4 +115,4 @@ It also writes one comparison picture (`archive-entries-en.png`) that the README
 
 「小幽灵的未完成事项」：把没做完的事变成住在旧宅里的小幽灵。写清楚“做到什么算完成”、拆成几个小步骤、一步步勾选，小幽灵会慢慢变得有颜色；你亲手确认完成后，它会盖章飞进纪念册，门厅里点亮一盏暖灯。界面内置英文和简体中文，所有内容只保存在你自己的浏览器里，没有账号、没有服务器、没有任何外部请求。
 
-运行：`npm install`，然后 `npm run dev`；测试：`npm test`，浏览器测试先 `npm run test:e2e:install` 再 `npm run test:e2e`；构建：`npm run build`，把 `dist/` 放到任何静态空间（根目录或子路径都可以，包括 GitHub Pages 的项目页）。「留一份副本」会下载包含你全部文字的 JSON；没有导入功能。代码为 MIT 许可。
+运行：`npm install`，然后 `npm run dev`；测试：`npm test`，浏览器测试先 `npm run test:e2e:install` 再 `npm run test:e2e`；构建：`npm run build`，把 `dist/` 放到任何静态空间（根目录或子路径都可以，包括 GitHub Pages 的项目页）。可选的背景音乐与音效默认关闭。「留一份副本」会下载包含你全部文字的 JSON；没有导入功能。代码为 MIT 许可。

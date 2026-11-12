@@ -24,6 +24,9 @@ import { WarmLamps } from './WarmLamps';
 import { useHashRoute } from './useHashRoute';
 import { usePageHiddenFlag } from './usePageHidden';
 import { LangSwitch } from './LangSwitch';
+import { SoundSwitch } from './SoundSwitch';
+import { SoundContext, useSoundController, useSoundCues, useSoundLifecycle } from './useSound';
+import { createSoundController, type SoundController } from '../sound/controller';
 import { LanguageScope } from './LanguageScope';
 import { useCopy } from './useCopy';
 
@@ -31,6 +34,8 @@ function Shell() {
   const t = useCopy();
   usePageHiddenFlag();
   const { store, ui } = useAppContext();
+  // 当前房子（真实或示例）的成功事件接到音效上。
+  useSoundCues(useSoundController(), store, ui);
   const route = useHashRoute();
   const demo = useDemoControl();
   // 留下事件或文案键，切换语言后连已存在的播报也能重新译出。
@@ -82,7 +87,10 @@ function Shell() {
       {demo.active ? <DemoBar /> : null}
       <header class="app-header">
         <h1 tabIndex={-1}>{t('app.title')}</h1>
-        <LangSwitch />
+        <div class="header-tools">
+          <LangSwitch />
+          <SoundSwitch />
+        </div>
         <LiveRegion message={message} />
       </header>
       {recovering || demo.active ? null : (
@@ -125,10 +133,14 @@ function Shell() {
 export interface AppProps {
   /** 测试时注入自己的 store（例如可注入写入失败的端口）。 */
   context?: AppContext;
+  /** 页面级的声音控制器；缺省时放不了声音。 */
+  sound?: SoundController;
 }
 
-export function App({ context }: AppProps = {}) {
+export function App({ context, sound: given }: AppProps = {}) {
   const [real] = useState(() => context ?? createAppContext());
+  const [sound] = useState(() => given ?? createSoundController({ engine: null }));
+  useSoundLifecycle(sound);
   const [demoCtx, setDemoCtx] = useState<AppContext | null>(null);
   // 进入示例前的现场：只记 hash 与滚动位置；真实 store 与 ui 本来就原样留在 real 里。
   const before = useRef<HashSnapshot | null>(null);
@@ -177,10 +189,12 @@ export function App({ context }: AppProps = {}) {
   );
 
   return (
-    <DemoControlContext.Provider value={control}>
-      <StoreContext.Provider key={demoCtx ? 'demo' : 'real'} value={demoCtx ?? real}>
-        <LanguageScope><Shell /></LanguageScope>
-      </StoreContext.Provider>
-    </DemoControlContext.Provider>
+    <SoundContext.Provider value={sound}>
+      <DemoControlContext.Provider value={control}>
+        <StoreContext.Provider key={demoCtx ? 'demo' : 'real'} value={demoCtx ?? real}>
+          <LanguageScope><Shell /></LanguageScope>
+        </StoreContext.Provider>
+      </DemoControlContext.Provider>
+    </SoundContext.Provider>
   );
 }

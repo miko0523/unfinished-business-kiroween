@@ -6,6 +6,7 @@ export const COPY_KEYS = [
   'language.label',
   'language.en',
   'language.zh-CN',
+  'sound.label',
   'create.label',
   'create.placeholder',
   'create.submit',

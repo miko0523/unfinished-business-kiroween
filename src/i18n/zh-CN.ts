@@ -6,6 +6,7 @@ export const zhCN: CopyTable = {
   'language.label': '语言',
   'language.en': 'English',
   'language.zh-CN': '简体中文',
+  'sound.label': '音乐和音效',
   'create.label': '还有什么事在等着你？',
   'create.placeholder': '简简单单几个字就好',
   'create.submit': '迎接一只小幽灵',

@@ -2,8 +2,8 @@ import { describe, expect, it } from 'vitest';
 import { readdirSync, readFileSync, statSync } from 'node:fs';
 import { extname, join, relative, resolve, sep } from 'node:path';
 
-// 16.1：design.md 的 P1 至 P27 各有一个带标签的属性测试。检查三件事：
-//   1. 标签 `Feature: unfinished-business, Property N: <标题>` 恰好 27 个，编号 1 至 27 各一个，标题与 design.md 逐字相同；
+// 16.1：design.md 的每条属性（P1 至 P27；阶段 18 起增加 P28 至 P33）各有一个带标签的属性测试。检查三件事：
+//   1. 标签 `Feature: unfinished-business, Property N: <标题>` 的个数等于 design.md 的属性条数，编号从 1 起连续各一个，标题与 design.md 逐字相同；
 //   2. 每个带标签的测试块里都有 fc.assert，且显式写出的 numRuns 全部不少于 100（至少有一个）；
 //   3. tests/ 与 e2e/ 里没有 skip、todo、only。
 // 这是对“写法”的静态检查：它保证每条属性有一个真实的、轮数足够的 fast-check 测试，不保证属性本身写得对。
@@ -72,14 +72,18 @@ const designTitles = new Map<number, string>(
   [...readFileSync(resolve('.kiro/specs/unfinished-business/design.md'), 'utf8').matchAll(/^### Property (\d+): (.+)$/gm)].map((m) => [Number(m[1]), m[2]!.trim()]),
 );
 const tags = testFiles.flatMap((f) => findTags(relative(resolve('.'), f), readFileSync(f, 'utf8')));
+/** design.md 的属性条数：阶段 16 收口时为 27，阶段 18 声音加了 6 条。只增不减，编号必须连续。 */
+const PROPERTY_COUNT = designTitles.size;
+const MIN_PROPERTIES = 33;
 
 describe('16.1 属性测试覆盖清单', () => {
-  it('design.md 列出 P1 至 P27', () => {
-    expect([...designTitles.keys()]).toEqual(Array.from({ length: 27 }, (_, i) => i + 1));
+  it(`design.md 列出从 P1 起连续的属性，至少 ${MIN_PROPERTIES} 条`, () => {
+    expect(PROPERTY_COUNT).toBeGreaterThanOrEqual(MIN_PROPERTIES);
+    expect([...designTitles.keys()]).toEqual(Array.from({ length: PROPERTY_COUNT }, (_, i) => i + 1));
   });
 
-  it('带标签的测试恰好 27 个，编号 1 至 27 各一个', () => {
-    expect(tags.map((t) => t.n).sort((a, b) => a - b)).toEqual(Array.from({ length: 27 }, (_, i) => i + 1));
+  it('带标签的测试个数等于 design 的属性条数，编号各一个', () => {
+    expect(tags.map((t) => t.n).sort((a, b) => a - b)).toEqual(Array.from({ length: PROPERTY_COUNT }, (_, i) => i + 1));
   });
 
   it('每个标签的标题与 design.md 逐字相同', () => {

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { acceptedBuildTimeFindings, licenseAllowed, licenseFindings, licenseRows, maskEmail, scanPath, scanText, scanTree, treeFiles, type LockPackage } from '../scripts/release-check';
+import { acceptedBuildTimeFindings, licenseAllowed, licenseFindings, licenseRows, maskEmail, scanHistoryPath, scanPath, scanText, scanTree, treeFiles, type LockPackage } from '../scripts/release-check';
 
 // 16.3 公开前检查。这里测两件事：规则本身能抓到东西（全部用内存样例，样例里的危险串都是拼出来的，免得这个文件自己被扫出命中），
 // 以及当前仓库（已追踪 + 未追踪但没被忽略的文件）扫出来是空的。历史、许可证和私密词清单由 `npm run release:check` 另行检查。
@@ -53,6 +53,13 @@ describe('release-check：规则自检（内存样例）', () => {
     expect(scanPath('docs/screenshots/reference-sheet.png').map((f) => f.rule)).toContain('疑似参考图或概念稿');
     expect(scanPath('.local-inputs/lantern-source-1024x1536.png').map((f) => f.rule)).toEqual(expect.arrayContaining(['本地输入目录被追踪', '未登记的图片']));
     expect(scanPath('src/main.tsx')).toEqual([]);
+  });
+
+  it('历史路径只为 GitHub Pages 的已登记旧宅图片放行根目录形态', () => {
+    expect(scanHistoryPath('assets/dollhouse/1x/lobby.png', false)).toEqual([]);
+    expect(scanHistoryPath('assets/other/lobby.png', false).map((f) => f.rule)).toContain('未登记的图片');
+    expect(scanHistoryPath('assets/dollhouse/private-name.png', false, ['private-name']).map((f) => f.rule)).toContain('私密词');
+    expect(scanPath('assets/dollhouse/1x/lobby.png').map((f) => f.rule)).toContain('未登记的图片');
   });
 
   it('二进制文件只按路径查', () => {

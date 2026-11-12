@@ -99,7 +99,7 @@ src/
 tests/         *.test.ts  *.prop.test.ts  components/*.test.tsx
 ```
 
-约束：`domain/ house/ persistence/ i18n/ animation/(events,plan)` 禁止引用 `document`、`window` 与 `preact`，由上述 Vitest 源码安全扫描保证。`animation/` 中仅 `player.ts` 可以引用 DOM。随机数一律由调用方注入的 `rand: () => number` 提供，保证测试可复现。
+约束：`domain/ house/ persistence/ i18n/ animation/(events,plan) sound/(除 browserAudio.ts)` 禁止引用 `document`、`window` 与 `preact`，由上述 Vitest 源码安全扫描保证。`animation/` 中仅 `player.ts` 可以引用 DOM；`sound/` 中仅 `browserAudio.ts` 可以引用 DOM（见“声音”一节）。随机数一律由调用方注入的 `rand: () => number` 提供，保证测试可复现。
 
 ## Components and Interfaces
 
@@ -857,6 +857,42 @@ function restorePrimary(storage: Storage, raw: string): void {
 
 **Validates: Requirements 6.9, 6.10**
 
+### Property 28: 每次加载声音都是关且不出声
+
+*For any* 本地存储内容（包括早先版本留下的任意 `ub:sound` 值，含 `on`）与页面加载时的前后台状态 `hidden`，`initialSound(hidden)` 恒为 `{ status: 'off', granted: false, hidden, resumeOnShow: false }`；新建的控制器状态为 `off`、开关未按下、没有调用引擎的任何方法，音效也不出声。
+
+**Validates: Requirements 14.1, 14.3**
+
+### Property 29: 声音代码从不读写存储
+
+*For any* 本地存储内容与任意操作序列（开关、普通手势、切到后台、回到前台、音效；起播成功或失败），控制器从头到尾没有访问 `localStorage` 或 `sessionStorage`（取对象、读、写、删、清空、列键都算），存储内容逐字符不变；并且 `src/sound/`、`SoundSwitch.tsx`、`useSound.ts` 的源码里不出现 `localStorage`、`sessionStorage`、`indexedDB`、`ub:sound`、`getItem`、`setItem`。
+
+**Validates: Requirements 14.3, 14.9**
+
+### Property 30: 开与关只由声音开关决定
+
+*For any* 由开关、普通手势、切到后台、回到前台、起播成功、失败组成的输入序列，`stepSound` 中开关从关变成开只发生在输入为开关的那一步；从开变成关只发生在输入为开关或失败的那一步（失败静默回到关，见 P31）；每按一次开关，按下状态都翻转；命令只有 `start`、`stop`、`pause`、`resume`，没有任何存储操作。
+
+**Validates: Requirements 14.1, 14.3**
+
+### Property 31: 声音失败回到关且不抛错
+
+*For any* 可达状态，输入“失败”后状态为 `off`、命令只有清理用的 `stop`、不产生 `start` 或 `resume`；*for any* 故障点（创建音频环境抛错、加载被拒绝、解码被拒绝、恢复播放被拒绝或超时、开始播放抛错），控制器在开关与手势之后不抛出异常，最终状态为 `off`。
+
+**Validates: Requirements 14.5**
+
+### Property 32: 出声只来自本次的玩家手势
+
+*For any* 输入序列，`start` 只在开关从关打到开的那一步产生（手势只可能发生在可见页面上，所以手势与开关都会清掉残留的 `hidden`）。`resume` 只在回到前台、且切到后台前正在播放或正在起播（本次已取得许可）时产生。初始化、普通手势、切到后台、在 `off` 时回到前台都不产生 `start` 或 `resume`。
+
+**Validates: Requirements 14.2, 14.3, 14.5**
+
+### Property 33: 音效只配成功的故事时刻
+
+*For any* 随机操作序列（含非法输入、满员、取消勾选、删除与确认）经 reducer 得到的事件，`cuesFor` 的结果恰好是：每个 `GhostMovedIn` 一个 `move-in`（每只提灯朋友入住都再加一个稍后的 `lantern`）；每个 `StepChecked` 按 chore 给 `sweep`、`water` 或 `wipe`；每个 `Confirmed` 先 `stamp` 后 `lamp`；其余事件（取消勾选、状态变化、长楼、搬走、暖灯）没有音效。被拒绝的操作没有事件，也就没有音效。
+
+**Validates: Requirements 14.4**
+
 ## Error Handling
 
 | 场景 | 处理 |
@@ -873,6 +909,7 @@ function restorePrimary(storage: Storage, raw: string): void {
 | 两只 Ghost 空间不足 | `planMove` 返回 `wait`，保持上一帧安全位置与姿态，稍后重试；家务动画等待超过 2 秒则在原地播放 |
 | 导出失败 | 提示重试，不改 state |
 | 未捕获异常 | 顶层 `window.onerror` 显示温柔提示与导出入口，不清除存储 |
+| 音频加载、解码或播放被拒绝 | 声音开关静默回到关，不弹提示、不写任何存储、不重试；游戏功能不受影响（R14.5） |
 
 ## Testing Strategy
 
@@ -924,3 +961,93 @@ function restorePrimary(storage: Storage, raw: string): void {
 - `CollectionPage` 只显示图鉴；`RevealPage` 只显示底图与雾格。底图在 400×300 坐标系，以 `translate(88 -15)` 放置现有 140×180 的完整角色并放大 1.6 倍，脸位于中排第 2/3 列；右眼所在第 7 格在第十二枚揭开。揭开顺序（零起始）为 `[0,3,8,11,1,2,4,7,9,10,5,6]`。雾格不透明，每格实际覆盖 100×100，不用半透明雾泄漏脸。
 - 身份配色覆盖身体与眼睛，原进度外观继续决定透明度、缩放、光晕、待确认金牌；文本仍传达澄清/进度/待确认/确认。提灯星与灯是独立道具组件，身体仍只用 `ghostOutlinePath`，步行动作不切身体。
 - 门厅响应只消费提灯入住事件，增亮当前已获得灯的装饰层，不更改 state。减少动态不创建光脉冲，揭雾立即切换。UI、导出及原存储隔离策略继续适用。
+
+## 声音（Requirement 14，阶段 18）
+
+原则（R14 引言）：网页初开绝对安静；先有玩家操作才出声；所有声音轻、慢起、不突然。声音是页面级的，不属于任何一座房子：示例、恢复、内存模式下开关同样可用。开关只是这一个页面的选择，不记住、不写任何存储键，每次加载都从关开始（见下面“开关不记住”）。
+
+### 模块边界
+
+| 文件 | 内容 | DOM |
+|---|---|---|
+| `src/sound/machine.ts` | 纯状态机 `initialSound(hidden)`（恒为关）、`stepSound(state, input) → { state, commands }` | 无 |
+| `src/sound/cues.ts` | 纯函数 `cuesFor(events, kindOf)`：领域事件 → 音效名与延迟；`farewellTimes(reduced)`：盖章与灯亮相对确认的时刻（取自 `animation/plan.ts`） | 无 |
+| `src/sound/loop.ts` | 纯函数 `loopWindow(decodedSeconds)`：决定背景音乐循环区间 | 无 |
+| `src/sound/engine.ts` | Web Audio 引擎（`AudioContext`、`GainNode`、`AudioBufferSourceNode`）；只依赖注入的 `AudioDeps`，自己不碰全局 | 无 |
+| `src/sound/controller.ts` | 把状态机与引擎接在一起，执行命令；对外是可订阅的 `{ status }`；不碰任何存储 | 无 |
+| `src/sound/browserAudio.ts` | 唯一接触浏览器的地方：`window.AudioContext`（或 `webkitAudioContext`）、内嵌音频的 base64 解码、定时器 | 有 |
+| `src/sound/embeddedAudio.ts` | 发起人验收过的音频字节；与应用代码一起延迟加载，不形成独立音频文件 | 无 |
+| `src/components/SoundSwitch.tsx`、`useSound.ts` | 右上角小喇叭按钮；手势与前后台监听；事件接线 | 有 |
+
+**源码安全扫描的调整**（`tests/source-safety.test.ts`）：`sound/` 加入“禁止 DOM 全局与 preact”的目录，唯一 DOM 例外是 `sound/browserAudio.ts`（与 `animation/player.ts` 的例外同样写法）。`fetch`、`XMLHttpRequest`、`sendBeacon` 与外部 URL 继续全仓零容忍。音频字节由 `embeddedAudio.ts` 保存为应用模块内容，玩家按开关时才动态 import；`browserAudio.ts` 用 `window.atob` 解码为 `ArrayBuffer`。构建产物扫描明确拒绝独立 `.mp3` 文件，并由 E2E 核对音频模块只在开关按下后、从当前页面子路径内加载一次。
+
+### 播放实现与无缝循环（R14.2、R14.6）
+
+- 背景音乐：`bgm-loop.mp3` 用 `decodeAudioData` 解码成 `AudioBuffer`，由 `AudioBufferSourceNode`（`loop = true`）循环播放：`source → bgmGain → master → destination`。不用 `<audio loop>`：MP3 每帧 1152 个采样，编码器在开头补“预热”采样、结尾补齐整帧，`<audio>` 在接缝处是否跳过这些填充取决于浏览器，常留下几十毫秒的缝；`AudioBufferSourceNode` 的循环是采样级的，跳回点精确到采样，没有解码器重新起播的空当。
+- 填充：素材已换为 0.8 倍速版本（阶段 18 第三轮）。内嵌 BGM 字节的 LAME 头记录 576 个预热采样、904 个尾部补齐，有效采样 7756088（44.1 kHz 下约 175.875 s）。Chromium 的 `decodeAudioData` 已按 LAME 头去掉填充，解码长度就是有效部分（第一轮在 44.1 kHz 与 48 kHz 两种环境实测旧文件，接缝两端样本差与相邻样本的平均差同量级；新文件沿用同一处理）。`loopWindow` 对其他实现兜底：长度约等于“未去填充”的约 175.909 s（相差不超过 2 ms）时设 `loopStart = 576 / 44100`、`loopEnd = loopStart + 有效时长`，并从 `loopStart` 起播；其他长度（包括已去填充的约 175.875 s）循环整段（不猜）。`loop.ts` 的这几个数由 `tests/sound-file.test.ts` 解码应用模块里的 base64 并读取 Xing/LAME 头核对；浏览器测试核对起播声源的解码时长与该常数一致。这是对已知编码结构的处理，不是听感保证：Chrome 与 Safari 的真耳朵验收仍是 R14.6 的验收依据。
+- 渐入：`gain.cancelScheduledValues(now)`，`setValueAtTime(0, now)`，`linearRampToValueAtTime(BGM_GAIN, now + 2)`，然后 `source.start(now, loopStart)`。从 0 起，不会以目标音量起音。目标 `BGM_GAIN = 0.15`（第三轮由 0.2 调低：发起人试听觉得背景音乐太响）。
+- 渐出：从当前值 `linearRampToValueAtTime(0, now + 0.5)`，`source.stop(now + 0.55)`；之后环境挂起，省电。
+- 音效：解码后各自一个 `AudioBufferSourceNode → 每次的 gain → sfxBus → master`。七个音效文件已做响度拉齐（约 −20 LUFS），所以音量统一为一个常数 `SFX_GAIN = 0.25`，不再逐个设定。它略高于 `BGM_GAIN`，满足 R14.4 “音效与背景音乐响度相近、在背景音乐之上清晰可闻”（第三轮之前音效增益都低于背景音乐，发起人试听反馈音效，尤其擦窗，几乎听不见）。**同名音效同时只保留一个**：该名字的上一次还在排队或在响时，新的一次直接不播（不重启、不叠加）；不同名的可以同时响。音效只在背景音乐已经起播（`playing`）时播放。
+- 加载时机：页面加载时不创建 `AudioContext`、不加载内嵌音频模块。第一次需要出声（玩家按开关打开）时，在手势的同步调用栈里创建环境并 `resume()`，再动态加载包含背景音乐与七个音效的应用模块（只加载一次，之后复用）。音效解码失败只让那一个音效安静，背景音乐模块加载或解码失败才算失败。
+- 恢复的超时：`resume()` 在 2.5 秒内没有让环境进入 `running`，按“浏览器拒绝播放”处理。
+
+### 状态机（`machine.ts`）
+
+状态 `status ∈ off | starting | playing | paused`，另有 `granted`（本次页面已通过玩家手势取得播放许可）、`hidden`（页面在后台）、`resumeOnShow`（切到后台前正在播放或正在起播）。开关的按下状态 = `status !== 'off'`。
+
+| 输入 | 状态与命令 |
+|---|---|
+| 初始化 | 永远 `off`，`granted = false`。无命令 |
+| 开关（当前 `off`） | → `starting`，`granted = true`，命令 `start` |
+| 开关（当前 `starting`/`playing`/`paused`） | → `off`，命令 `stop` |
+| （开关各行） | 同时 `hidden = false`：按开关只可能发生在可见页面上 |
+| 普通手势 | 只记 `granted = true`、`hidden = false`；不改状态、无命令 |
+| 切到后台 | `playing`/`starting` → `paused`，`resumeOnShow = true`，命令 `pause`；其余只记 `hidden` |
+| 回到前台 | `paused` 且 `resumeOnShow` 且 `granted` → `starting`，命令 `resume`；其余只清 `hidden` |
+| 起播成功 | `starting` → `playing`（若此时已在后台则 → `paused` 并命令 `pause`）；其他状态忽略 |
+| 失败 | → `off`，命令 `stop`（只做清理） |
+
+打开声音只有一条路：按开关（P30、P32）。普通手势只记下本次页面的播放许可，从不起播。失败时把开关拨回关，不重试：要再试，玩家自己再按一次开关，不会重试轰炸。
+
+### 开关不记住（R14.1、R14.3、R14.9）
+
+阶段 18 最初把开关记在独立键 `ub:sound` 里：记住“开”的页面刷新后，喇叭显示开着，但浏览器要等这一页的第一次手势才允许出声，于是一直没有声音，直到玩家点了页面别处才突然响起来。发起人 2026-11-11 试玩时正是这样：“喇叭亮着没有声音……点别的地方突然响了”，玩家看不懂。决定：开关不再记住。
+
+- 每次页面加载、刷新、新开标签页都从关开始，喇叭显示关（P28）。按喇叭是打开或关上声音的唯一方式（P30）。
+- 声音代码不读、不写、不删任何存储键（P29）。浏览器里早先版本留下的 `ub:sound` 一律不理会，也不在加载时删除它：恢复界面与内存模式承诺零写入，删键也是写入。它本来就不在 `SaveData`、`serializeSave` 与导出里；备份扫描只看 `ub:backup:` 前缀，与它无关。
+- 同一个页面切到后台再回来，开关保持这一页原来的开或关，播放按下面“前后台”暂停与恢复。
+
+### 前后台（R14.5）
+
+`visibilitychange` 时 `document.hidden` 为真：背景音乐 0.15 秒内降到 0 并挂起环境（挂起冻结音频时钟，循环位置原样保留）。回到前台：只有 `resumeOnShow` 且 `granted` 才恢复环境、从 0 起按 2 秒渐入；关着的页面回到前台不尝试出声。开关的按下状态在前后台之间不变（`paused` 也算开）。
+
+**残留的 `hidden`（发起人 2026-11-11 无痕窗口实测）**：A 标签页正常；接着往前新开 B、C、D……每一页点开喇叭都显示开着却没有声音，切回任意旧页再回来才响（B-A-B、B-C-B 好，B-C-D 不好）。原因：新标签页很可能是浏览器预加载出来的，控制器创建时 `document.hidden` 为真，激活时没有收到可靠的 `visibilitychange`，`hidden` 一直残留；按开关起播成功后按“起播成功时已在后台”一行转成 `paused`。修法两层：(1) 开关与普通手势都清 `hidden`（玩家能点到的页面一定可见）；(2) `useSoundLifecycle` 装上时、`pageshow` 与 `prerenderingchange` 时都按真实 `document.hidden` 对一次账。
+
+### 手势的认定
+
+在 `window` 上捕获阶段、被动监听：`pointerdown`（仅鼠标）、`pointerup` 与 `touchend`（触控与笔）、`keydown`（不含 Escape、单独的修饰键与按住重复）。这些是 HTML 规范里能授予“用户激活”的事件，避免在没有激活的事件里起播被浏览器拒绝。只认 `isTrusted` 的事件。普通手势只记下许可、清掉残留的 `hidden`，不起播。落在声音开关自身上的手势不算普通手势，交给开关处理，同一下点击不会被算两次。
+
+### 与现有事件的接线（R14.4）
+
+`useSound` 在 `Shell` 里订阅当前 store（真实或示例）的 `subscribeEvents`；被拒绝的操作不发布事件（非法输入、满员、存储失败、确认写入失败都在 store 里返回前就挡掉了），所以不会有音效。
+
+| 时刻 | 事件 | 音效 |
+|---|---|---|
+| 新幽灵成功入住 | `GhostMovedIn` | `move-in` |
+| 提灯朋友每次入住 | `GhostMovedIn` 且该 Task 的 `ghostKind === 'lantern'`（与门厅迎接灯光同一判据，见 `useLanternWelcome`） | `move-in` 之后 0.5 秒 `lantern` |
+| 勾选步骤后做家务 | `StepChecked{chore}` | `sweep` → `sweep`，`water` → `water`，`window` → `wipe` |
+| 明确确认送别 | `Confirmed` | `stamp` 后接 `lamp` |
+| 取消勾选、普通按钮、状态变化、长楼、搬走、暖灯 | — | 无 |
+
+- 家务映射以现有实现为准：`choreFor(stepIndex) = index % 3`，第 1/2/3 步依次扫地、浇水、擦窗，第 4 步起循环；音效跟着事件里的 chore 走，不另算步序。
+- 送别的两个音效对准告别动画：正常动态下 `stamp` 在盖章阶段开始时（确认后 1.9 秒），`lamp` 在暖灯点亮时（`lampAtMs`，确认后 4.1 秒）；减少动态下静止盖章页立刻出现，`stamp` 立即、`lamp` 0.45 秒后。两个时刻都由 `farewellTimes` 从 `animation/plan.ts` 的常量算出，不另写数字。玩家按“跳过动画”提前结束时，还没响的那一两个立即补上（`stamp`，0.35 秒后 `lamp`），不会在稳态出现几秒后才响。第十二盏之后不再添灯，但书页仍会亮一下，`lamp` 照响。
+- 提灯风铃（发起人已定）：每只提灯朋友入住都响一次（刷新、重开都不重播，和门厅迎接灯光一致）；第一只（累计十二次后保证的那只）与之后 5% 抽到的都算。
+- 减少动态（R14.7）：不改变开关、渐入渐出与音效的行为，只让送别两声对准静止盖章页的时间。
+
+### 测试钩子
+
+不在产品代码里挂全局对象。开关按钮带 `data-sound-state`（即 `status`）。浏览器测试用 `addInitScript` 包住 `AudioContext`、`AudioParam.prototype.linearRampToValueAtTime`、`AudioBufferSourceNode.prototype.start/stop`，记录环境的创建、起播与 ramp 目标值，并读取 `GainNode.gain.value` 观察渐入渐出；不靠听。
+
+### 失败降级（R14.5、R14.8）
+
+创建环境抛错、内嵌音频模块加载失败、base64 或音频解码被拒绝、`resume()` 被拒绝或超时、`start()` 抛错：引擎返回失败，控制器输入“失败”，开关静默回到关；不弹提示、不写任何存储、不重试、不抛异常（P31）。音效单个解码失败只让它安静。音频随应用模块发布，没有独立音频文件、外部 URL、第三方库或 CDN。

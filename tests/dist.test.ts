@@ -39,6 +39,7 @@ const isFrameworkFile = (path: string) => FRAMEWORK.file.test(path);
 const WRITE_TOKENS = ['innerHTML', 'outerHTML', 'insertAdjacentHTML', 'dangerouslySetInnerHTML', '__html', 'document.write'];
 const TEXT_EXT = new Set(['.html', '.js', '.css', '.json', '.svg', '.txt', '.map', '.webmanifest']);
 const BINARY_OK = new Set(['.png']);
+const isBinary = (ext: string) => BINARY_OK.has(ext);
 const DEV_MARKERS = [
   'calibrate',
   'data-debug',
@@ -135,7 +136,7 @@ function collect(root: string): BuiltFile[] {
         continue;
       }
       const rel = relative(root, p).split(sep).join('/');
-      out.push({ path: rel, text: BINARY_OK.has(extname(p).toLowerCase()) ? null : readFileSync(p, 'utf8') });
+      out.push({ path: rel, text: isBinary(extname(p).toLowerCase()) ? null : readFileSync(p, 'utf8') });
     }
   };
   walk(root);
@@ -310,5 +311,12 @@ describe('构建产物扫描：扫描器自检（内存样例）', () => {
   it('抓到意外的文件类型与 source map', () => {
     expect(hits({ path: 'assets/a.js.map', text: '{}' }).length).toBeGreaterThan(0);
     expect(hits({ path: 'a.woff2', text: null }).length).toBeGreaterThan(0);
+  });
+
+  it('不发布独立音频文件', () => {
+    expect(hits({ path: 'assets/audio/bgm-loop.mp3', text: null }).length).toBeGreaterThan(0);
+    expect(hits({ path: 'assets/audio/sfx/stamp.mp3', text: null }).length).toBeGreaterThan(0);
+    expect(hits({ path: 'assets/audio/a.ogg', text: null }).length).toBeGreaterThan(0);
+    expect(hits({ path: 'assets/audio/a.mp3', text: 'ID3' }).length).toBeGreaterThan(0);
   });
 });

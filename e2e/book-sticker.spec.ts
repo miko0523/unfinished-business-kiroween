@@ -163,7 +163,9 @@ function expectFeathered(p: { contribution: number[]; warm: number[][]; dsf: num
   expect(Math.max(...c.slice(0, 6))).toBeGreaterThan(4);
   expect(Math.abs(c[c.length - 1]!)).toBeLessThan(1.5);
   const steps = c.slice(1).map((v, i) => Math.abs(v - c[i]!));
-  expect(Math.max(...steps)).toBeLessThan(3);
+  // 相邻像素的差里有 8 位量化噪声：320 宽靠近火焰处坡度约 2/像素，平滑的光晕单步实测到 3.6（阶段 18 第二轮页头变矮、房子上移后；原页头下同一处为 2.9）。
+  // 硬边会在一步里跳过大半个近火焰处的增量（约 25），4 仍然抓得到。
+  expect(Math.max(...steps)).toBeLessThan(4);
   // Pale warm yellow: red and green are lifted more than blue.
   const first = p.warm.slice(0, 6).reduce((s, w) => [s[0]! + w[0]!, s[1]! + w[1]!, s[2]! + w[2]!], [0, 0, 0]);
   expect(first[0]!).toBeGreaterThan(first[2]!);

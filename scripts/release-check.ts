@@ -91,6 +91,17 @@ export function scanPath(path: string, deny: readonly string[] = []): Finding[] 
   return out;
 }
 
+/**
+ * GitHub Pages 的构建分支会把 public/ 内容发布到根目录，因此已登记的旧宅图片会以
+ * assets/dollhouse/ 出现在历史中。只在历史路径检查放行这一种形态；当前源码树仍由
+ * scanPath 强制只能放在 public/assets/dollhouse/，私密词等其它规则照常保留。
+ */
+export function scanHistoryPath(path: string, current: boolean, deny: readonly string[] = []): Finding[] {
+  return scanPath(path, deny)
+    .filter((finding) => !(finding.rule === '未登记的图片' && /^assets\/dollhouse\//.test(path)))
+    .map((finding) => ({ ...finding, where: `${path}${current ? '' : '（已删除）'}` }));
+}
+
 /** 当前文件集合的全部命中。 */
 export function scanTree(files: readonly FileEntry[], deny: readonly string[] = []): Finding[] {
   return files.flatMap((f) => [...scanPath(f.path, deny), ...(f.text === null ? [] : scanText(f.path, f.text, deny))]);
@@ -246,7 +257,7 @@ export function scanHistory(deny: readonly string[] = [], root = '.'): HistoryRe
   }
   const everPaths = new Set(git(['-C', root, 'log', '--all', '--name-only', '--format=', '--no-renames']).split('\n').filter(Boolean));
   const current = new Set(git(['-C', root, 'ls-files']).split('\n'));
-  const pathFindings = [...everPaths].flatMap((p) => scanPath(p, deny).map((f) => ({ ...f, where: `${p}${current.has(p) ? '' : '（已删除）'}` })));
+  const pathFindings = [...everPaths].flatMap((p) => scanHistoryPath(p, current.has(p), deny));
   return { commits: meta.length, identities, findings, pathFindings };
 }
 

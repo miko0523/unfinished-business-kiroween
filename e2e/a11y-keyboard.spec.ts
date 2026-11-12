@@ -203,8 +203,8 @@ for (const lang of LANGS) {
 
     // Without a card.
     const plain = await allTabStops(page);
-    const kinds = plain.map((s) => (s.cls.includes('ghost-button') ? 'ghost' : s.cls.includes('archive-book') ? 'book' : s.cls.includes('footer-link') ? 'footer' : s.id === 'create-title' ? 'create' : s.cls.includes('keep-copy') ? 'keep' : s.cls.includes('demo-try') ? 'try' : s.tag === 'BUTTON' && s.name === c['language.en'] ? 'lang' : s.tag === 'BUTTON' && s.name === c['language.zh-CN'] ? 'lang' : s.name === c['create.submit'] ? 'submit' : s.cls));
-    expect(kinds).toEqual(['lang', 'lang', 'keep', 'try', 'create', 'submit', 'ghost', 'ghost', 'ghost', 'ghost', 'ghost', 'book', 'footer']);
+    const kinds = plain.map((s) => (s.cls.includes('ghost-button') ? 'ghost' : s.cls.includes('archive-book') ? 'book' : s.cls.includes('footer-link') ? 'footer' : s.id === 'create-title' ? 'create' : s.cls.includes('keep-copy') ? 'keep' : s.cls.includes('demo-try') ? 'try' : s.tag === 'BUTTON' && s.name === c['language.en'] ? 'lang' : s.tag === 'BUTTON' && s.name === c['language.zh-CN'] ? 'lang' : s.cls.includes('sound-switch') ? 'sound' : s.name === c['create.submit'] ? 'submit' : s.cls));
+    expect(kinds).toEqual(['lang', 'lang', 'sound', 'keep', 'try', 'create', 'submit', 'ghost', 'ghost', 'ghost', 'ghost', 'ghost', 'book', 'footer']);
     const ghostStops = plain.filter((s) => s.cls.includes('ghost-button')).map((s) => [Number(s.floor), Number(s.slot)]);
     expect(ghostStops).toEqual([[4, 0], [3, 0], [3, 1], [2, 0], [2, 1]]);
 
@@ -449,7 +449,9 @@ for (const lang of LANGS) {
       stops.push(a.name);
       if (a.name === c['recovery.fresh.button']) break;
     }
-    expect(stops.slice(2)).toEqual([c['recovery.copy.button'], c['recovery.blank.button'], c['recovery.fresh.button']]);
+    // The header comes first: the two language buttons and the sound switch.
+    expect(stops.slice(0, 3)).toEqual([c['language.en'], c['language.zh-CN'], c['sound.label']]);
+    expect(stops.slice(3)).toEqual([c['recovery.copy.button'], c['recovery.blank.button'], c['recovery.fresh.button']]);
     await page.keyboard.press('Enter');
     await expect(page.getByRole('dialog')).toBeVisible();
     expect((await active(page)).inDialog).toBe(true);

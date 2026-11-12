@@ -9,9 +9,24 @@
 }
 
 .app-header h1 {
-  flex: 1 1 110px;
-  min-width: 0;
+  /* 100px 刚好放下英文标题最长的词（Unfinished）；min-content 兜底：字体更宽时让右侧工具整组换行，而不是标题被挤得溢出。 */
+  flex: 1 1 100px;
+  min-width: min-content;
   margin: 0;
+}
+
+/* 语言切换与小喇叭是一组，一起换行：宽度够时（360px 起）和标题同一行；更窄（320）时标题独占第一行，
+   这一组在第二行靠右，小喇叭不会独自掉到一行。组内也允许换行：只在放不下一组的极窄宽度（160、200）才会用到，避免横向溢出。 */
+.header-tools {
+  display: flex;
+  flex: 0 1 auto;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 8px 12px;
+  align-items: center;
+  min-width: 0;
+  margin-left: auto;
+  max-width: 100%;
 }
 
 .lang-switch {
@@ -35,4 +50,27 @@
   color: #1c1b22;
   background: #ffd479;
   border-color: #c9972b;
+}
+
+/* 声音开关：语言切换右边的小喇叭，在 .header-tools 组里最右；按下（开）时与选中的语言同色。 */
+.sound-switch {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  padding: 0;
+  color: #f3ead2;
+  background: #1b2547;
+  border-color: #6d7bb5;
+}
+
+.sound-switch[aria-pressed='true'] {
+  color: #1c1b22;
+  background: #ffd479;
+  border-color: #c9972b;
+}
+
+.sound-switch svg {
+  display: block;
 }

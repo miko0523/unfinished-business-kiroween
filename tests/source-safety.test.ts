@@ -7,6 +7,8 @@ const SVG_NS = 'http://www.w3.org/2000/svg';
 const CODE_EXT = new Set(['.ts', '.tsx', '.js', '.jsx', '.mjs']);
 const TEXT_EXT = new Set([...CODE_EXT, '.css', '.html', '.json', '.svg', '.md', '.txt']);
 const DOM_FREE_DIRS = new Set(['domain', 'house', 'persistence', 'i18n']);
+/** 声音模块里唯一可以引用 DOM 的文件。 */
+const AUDIO_DOM_FILE = 'sound/browserAudio.ts';
 
 /** 把注释替换为空白（保留换行与字符串内容）；可选地把字符串内容也抹成空格。 */
 function strip(text: string, blankStrings: boolean): string {
@@ -76,11 +78,14 @@ export function scanSource(relPath: string, text: string): string[] {
   for (const w of ['innerHTML', 'outerHTML', 'insertAdjacentHTML', 'dangerouslySetInnerHTML']) {
     ban(new RegExp(`\\b${w}\\b`), `禁止 ${w}`);
   }
-  for (const w of ['fetch', 'XMLHttpRequest', 'sendBeacon']) {
+  for (const w of ['XMLHttpRequest', 'sendBeacon']) {
     ban(new RegExp(`\\b${w}\\b`), `禁止 ${w}`);
   }
+  // fetch：全仓禁止。声音字节内嵌在延迟加载的应用模块里，不需要网络读取。
+  const fetches = [...code.matchAll(/\bfetch\b/g)].length;
+  if (fetches > 0) issues.push('禁止 fetch');
 
-  const noDom = DOM_FREE_DIRS.has(top) || (top === 'animation' && segs[1] !== 'player.ts');
+  const noDom = DOM_FREE_DIRS.has(top) || (top === 'animation' && segs[1] !== 'player.ts') || (top === 'sound' && relPath !== AUDIO_DOM_FILE);
   if (noDom) {
     ban(/(?<![.\w])document\b/, '该目录禁止引用 document');
     ban(/(?<![.\w])window\b/, '该目录禁止引用 window');
@@ -169,6 +174,17 @@ describe('源码安全扫描：扫描器自检（内存样例）', () => {
     expect(bad('animation/plan.ts', 'document.title;')).toBe(true);
     expect(bad('animation/events.ts', 'window.scrollTo(0, 0);')).toBe(true);
     expect(good('animation/player.ts', 'document.title; window.scrollTo(0, 0);')).toBe(true);
+  });
+
+  it('sound 中只有 browserAudio.ts 可以引用 DOM；fetch 在全仓都禁止', () => {
+    expect(bad('sound/engine.ts', 'const w = window.AudioContext;')).toBe(true);
+    expect(bad('sound/controller.ts', 'document.hidden;')).toBe(true);
+    expect(bad('sound/machine.ts', "import { h } from 'preact';")).toBe(true);
+    expect(good('sound/browserAudio.ts', 'const b = window.atob(x); window.setTimeout(f, 1);')).toBe(true);
+    expect(bad('sound/browserAudio.ts', 'const r = fetch(url);')).toBe(true);
+    expect(bad('sound/browserAudio.ts', 'new XMLHttpRequest();')).toBe(true);
+    expect(bad('sound/engine.ts', 'fetch(a);')).toBe(true);
+    expect(bad('components/X.tsx', 'fetch(a);')).toBe(true);
   });
 
   it('domain 禁止 Date.now、Math.random、crypto', () => {

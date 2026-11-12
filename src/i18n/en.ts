@@ -6,6 +6,7 @@ export const en: CopyTable = {
   'language.label': 'Language',
   'language.en': 'English',
   'language.zh-CN': '简体中文',
+  'sound.label': 'Music and sounds',
   'create.label': 'What is still waiting for you?',
   'create.placeholder': 'A few words are enough',
   'create.submit': 'Welcome a little ghost',

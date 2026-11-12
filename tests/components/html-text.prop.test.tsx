@@ -1,6 +1,6 @@
 // @vitest-environment happy-dom
 import { afterEach, describe, expect, it } from 'vitest';
-import { cleanup, fireEvent, render, screen, within } from '@testing-library/preact';
+import { cleanup, fireEvent, render, within } from '@testing-library/preact';
 import fc from 'fast-check';
 import { App } from '../../src/components/App';
 import { emptyState, type AppState, type Env } from '../../src/domain/types';
@@ -23,9 +23,9 @@ function stateWith(text: string): AppState {
 const view = (text: string) => render(<App context={{ store: createStore({ env, initial: stateWith(text) }), ui: createUiStore(), roam: { positionOf: () => null } }} />);
 
 /** 页面上所有元素的标签计数，用来证明文字没有被解析成额外的元素。 */
-const shape = () => {
+const shape = (root: ParentNode) => {
   const counts = new Map<string, number>();
-  for (const el of document.querySelectorAll('*')) counts.set(el.tagName, (counts.get(el.tagName) ?? 0) + 1);
+  for (const el of root.querySelectorAll('*')) counts.set(el.tagName, (counts.get(el.tagName) ?? 0) + 1);
   return [...counts].sort(([a], [b]) => a.localeCompare(b));
 };
 
@@ -43,41 +43,44 @@ afterEach(() => {
 describe('Feature: unfinished-business, Property 19: 渲染文本不解释 HTML', () => {
   it('Task_Title、criteria、Step 标题与 memo 里的 < > & 引号、script、img onerror 都作为文字出现，不产生额外元素或事件属性', () => {
     window.location.hash = '';
-    view('plain');
-    fireEvent.click(document.querySelector<HTMLElement>('[data-ghost]')!);
-    const houseShape = shape();
-    cleanup();
+    const plainHouse = view('plain');
+    fireEvent.click(plainHouse.container.querySelector<HTMLElement>('[data-ghost]')!);
+    const houseShape = shape(plainHouse.container);
+    plainHouse.unmount();
     window.location.hash = '#/archive';
-    view('plain');
-    const archiveShape = shape();
-    cleanup();
+    const plainArchive = view('plain');
+    const archiveShape = shape(plainArchive.container);
+    plainArchive.unmount();
 
     fc.assert(
       fc.property(textArb, (text) => {
         window.location.hash = '';
-        view(text);
-        const ghost = document.querySelector<HTMLElement>('[data-ghost]')!;
+        const house = view(text);
+        const ghost = house.container.querySelector<HTMLElement>('[data-ghost]')!;
         expect(ghost.getAttribute('aria-label')).toContain(text);
         fireEvent.click(ghost);
-        const card = screen.getByRole('complementary');
+        const card = house.container.querySelector<HTMLElement>('aside.task-card')!;
         expect(within(card).getByRole('heading', { level: 2 }).textContent).toBe(text);
         expect(card.querySelector('.criteria-text')!.textContent).toBe(text);
-        expect(within(card).getByRole('checkbox', { name: text })).toBeTruthy();
-        expect(shape()).toEqual(houseShape);
-        expect(document.querySelector('script')).toBeNull();
-        expect(document.querySelectorAll('[onerror],[onload]')).toHaveLength(0);
-        cleanup();
+        const checkbox = card.querySelector<HTMLInputElement>('input[type="checkbox"]');
+        expect(checkbox).not.toBeNull();
+        expect(checkbox!.closest('label')!.querySelector('span')!.textContent).toBe(text);
+        expect(shape(house.container)).toEqual(houseShape);
+        expect(house.container.querySelector('script')).toBeNull();
+        expect(house.container.querySelectorAll('[onerror],[onload]')).toHaveLength(0);
+        house.unmount();
 
         window.location.hash = '#/archive';
-        view(text);
-        const archive = document.querySelector('.archive')!;
+        const archiveView = view(text);
+        const archive = archiveView.container.querySelector('.archive')!;
         expect(archive.querySelector('.archive-memo')!.textContent).toBe(text);
         expect(archive.querySelector('.archive-title-line')!.textContent).toBe(text);
-        expect(shape()).toEqual(archiveShape);
-        expect(document.querySelectorAll('[onerror],[onload]')).toHaveLength(0);
-        cleanup();
+        expect(shape(archiveView.container)).toEqual(archiveShape);
+        expect(archiveView.container.querySelectorAll('[onerror],[onload]')).toHaveLength(0);
+        archiveView.unmount();
       }),
       { numRuns: 100 },
     );
-  });
+    // 每轮渲染整页 App：单独跑约 1.8 秒，全量并行时在负载下曾超过默认的 5 秒（阶段 18 页头多了声音开关）；给 10 秒。
+  }, 10_000);
 });
