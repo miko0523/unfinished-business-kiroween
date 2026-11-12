@@ -22,7 +22,9 @@ function boot(kv: FaultyKv, unavailable = false) {
   const store = createPersistentStore({ storage: unavailable ? null : storage, env, clock });
   return { store, clock, ctx: { store, ui: createUiStore(), roam: { positionOf: () => null } } };
 }
-const choose = (name: string) => fireEvent.click(screen.getByRole('button', { name }));
+// 语言是一个“E / 中”小按钮，名字里写着点了会切到哪种语言；其余按钮按原名点。
+const choose = (name: string) =>
+  fireEvent.click(screen.getByRole('button', { name: name === 'English' || name === '简体中文' ? new RegExp(`(switch to|切换到) ?${name}`) : name }));
 afterEach(() => { cleanup(); window.location.hash = ''; });
 
 describe('双语界面和会话边界', () => {

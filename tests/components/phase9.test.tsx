@@ -43,7 +43,7 @@ afterEach(() => {
   window.history.replaceState(null, '', '/');
 });
 
-const input = () => screen.getByLabelText(/still waiting/i) as HTMLInputElement;
+const input = () => screen.getByLabelText(/what's waiting/i) as HTMLInputElement;
 function create(text: string) {
   fireEvent.input(input(), { target: { value: text } });
   fireEvent.click(screen.getByRole('button', { name: /welcome a little ghost/i }));
@@ -462,7 +462,7 @@ describe('Demo / 存档 / 恢复 与阶段 9 的衔接', () => {
     render(<App context={ctx} />);
     expect(document.querySelector('ul[aria-label="Residents"]')).toBeNull();
     expect(document.querySelector('.residents-leaving')).toBeNull();
-    expect(screen.queryByLabelText(/still waiting/i)).toBeNull();
+    expect(screen.queryByLabelText(/what's waiting/i)).toBeNull();
     expect(screen.queryByRole('button', { name: /move out|Visit residents/i })).toBeNull();
     expect(document.querySelector('dialog')).toBeNull();
   });

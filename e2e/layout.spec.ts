@@ -1,7 +1,7 @@
 import { expect, test, type Page } from '@playwright/test';
 import { addStep, card, create, ghosts, ready, setCriteria } from './helpers/app';
 
-// 布局套件：固定宽度下，缩减版主线都能走完；无水平滚动；旧宅宽度不超限；899 与 900 之间切换无跳变。
+// 布局套件：固定宽度下，缩减版主线都能走完；无水平滚动；旧宅宽度不超限；899 以下单栏、900 起两栏。
 
 const SIZES = [
   [1280, 800],
@@ -20,7 +20,7 @@ for (const [width, height] of SIZES) {
     await ready(page);
     expect(await noHScroll(page)).toBe(true);
     const w0 = await stageWidth(page);
-    expect(w0).toBeLessThanOrEqual(Math.min(809, width - 16) + 0.5);
+    expect(w0).toBeLessThanOrEqual(Math.min(809, width - 16 - (width >= 900 ? 336 : 0), width >= 900 ? 600 : 809) + 0.5);
 
     await create(page, 'Reduced run');
     const ghost = ghosts(page).first();
@@ -48,18 +48,22 @@ for (const [width, height] of SIZES) {
   });
 }
 
-test('899 与 900 之间切换：旧宅宽度连续，没有跳变；全景入口只在窄屏', async ({ page }) => {
+test('899 与 900 之间切换：900 起变两栏（左控制列 + 右旧宅，默认宽度封顶 600），全景入口两边都有', async ({ page }) => {
   await page.setViewportSize({ width: 899, height: 800 });
   await ready(page);
   const narrow = await stageWidth(page);
+  expect(narrow).toBe(809);
   await expect(page.getByRole('button', { name: 'View full house' })).toHaveCount(1);
   await page.setViewportSize({ width: 900, height: 800 });
-  await expect(page.getByRole('button', { name: 'View full house' })).toHaveCount(0);
-  const wide = await stageWidth(page);
-  expect(wide).toBe(809);
-  expect(narrow).toBe(809);
+  await expect(page.getByRole('button', { name: 'View full house' })).toHaveCount(1);
+  // 900 宽：右栏只剩 900 − 16 − 336 = 548。
+  expect(await stageWidth(page)).toBe(548);
+  const x = await page.evaluate(() => ({ form: document.querySelector('.create-form')!.getBoundingClientRect().right, house: document.querySelector('.house')!.getBoundingClientRect().left }));
+  expect(x.house).toBeGreaterThanOrEqual(x.form);
+  await page.setViewportSize({ width: 1280, height: 800 });
+  await expect.poll(() => stageWidth(page)).toBe(600);
   await page.setViewportSize({ width: 899, height: 800 });
-  expect(await stageWidth(page)).toBe(809);
+  await expect.poll(() => stageWidth(page)).toBe(809);
 });
 
 test('2560 宽：旧宅图不超过 801 CSS px，舞台不拉伸，两侧继续是夜景', async ({ page }) => {

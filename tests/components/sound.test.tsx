@@ -70,7 +70,7 @@ describe('声音开关', () => {
 
   it('中文名称来自文案资源', async () => {
     render(<App context={makeContext()} sound={createSoundController({ engine: fakeEngine().engine })} />);
-    fireEvent.click(screen.getByRole('button', { name: '简体中文' }));
+    fireEvent.click(screen.getByRole('button', { name: /switch to 简体中文/ }));
     expect(screen.getByRole('button', { name: zhCN['sound.label'] }).getAttribute('aria-pressed')).toBe('false');
   });
 
@@ -126,7 +126,7 @@ describe('音效接线', () => {
 
   it('入住一声噗；勾选第 1/2/3 步依次扫地、浇水、擦窗；取消勾选没有声音', async () => {
     const { cues } = await playing();
-    type(/still waiting/i, 'Tidy the desk');
+    type(/what's waiting/i, 'Tidy the desk');
     click(/welcome a little ghost/i);
     expect(cues).toEqual([['move-in', 0]]);
     fireEvent.click(document.querySelector<HTMLElement>('[data-ghost]')!);
@@ -149,9 +149,9 @@ describe('音效接线', () => {
 
   it('非法输入与普通按钮不配音', async () => {
     const { cues } = await playing();
-    type(/still waiting/i, '   ');
+    type(/what's waiting/i, '   ');
     click(/welcome a little ghost/i);
-    type(/still waiting/i, 'x'.repeat(81));
+    type(/what's waiting/i, 'x'.repeat(81));
     click(/welcome a little ghost/i);
     click(en['keep.button']);
     expect(cues).toEqual([]);
@@ -159,7 +159,7 @@ describe('音效接线', () => {
 
   it('确认送别：盖章在前、灯亮在后，对准告别动画', async () => {
     const { cues } = await playing();
-    type(/still waiting/i, 'Tidy the desk');
+    type(/what's waiting/i, 'Tidy the desk');
     click(/welcome a little ghost/i);
     fireEvent.click(document.querySelector<HTMLElement>('[data-ghost]')!);
     type(/what does/i, 'Clear', card());
@@ -177,7 +177,7 @@ describe('音效接线', () => {
   it('关着的时候成功事件也不出声', () => {
     const fake = fakeEngine();
     render(<App context={makeContext()} sound={createSoundController({ engine: fake.engine })} />);
-    type(/still waiting/i, 'Tidy the desk');
+    type(/what's waiting/i, 'Tidy the desk');
     click(/welcome a little ghost/i);
     expect(fake.cues).toEqual([]);
   });

@@ -12,10 +12,12 @@ export interface HouseProps {
   grownFloors: GrownFloors;
   /** 叠在静态层之上的动态层（阶段 4 起接入）。 */
   children?: ComponentChildren;
+  /** 旧宅右上角的小按钮（“看全景”）：放在动态层外，不被裁剪，也不挡住 Ghost 的点击区。 */
+  corner?: ComponentChildren;
 }
 
 /** 旧宅舞台：居中、按视口等比缩放。静态层只拿到 grownFloors。 */
-export function House({ grownFloors, children }: HouseProps) {
+export function House({ grownFloors, children, corner }: HouseProps) {
   const { stageHeight } = layoutHouse(grownFloors);
   const growth = useFloorGrowth(grownFloors);
   const view = useViewLayout(grownFloors);
@@ -43,6 +45,7 @@ export function House({ grownFloors, children }: HouseProps) {
           ))}
         </div>
       ) : null}
+      {corner}
       {children ? <div class="house-overlay">{children}</div> : null}
     </div>
   );

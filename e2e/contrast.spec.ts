@@ -105,7 +105,7 @@ test('灰白绿描边对每层背景与对自身填充、金色描边对自身�
 
   // 标签：不透明底色，文字对比度 ≥4.5:1
   await page.goto('/');
-  await page.getByLabel('What is still waiting for you?').fill('Contrast');
+  await page.getByLabel("What's waiting?").fill('Contrast');
   await page.getByRole('button', { name: 'Welcome a little ghost' }).click();
   const tag = await page.locator('.ghost-tag').first().evaluate((el) => {
     const s = getComputedStyle(el);

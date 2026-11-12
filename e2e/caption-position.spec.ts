@@ -24,7 +24,7 @@ async function covered(page: Page): Promise<string[]> {
     const c = cap.getBoundingClientRect();
     const selectors: [string, string][] = [
       ['title', 'h1'],
-      ['language switch', '.lang-switch button'],
+      ['language switch', '.lang-switch'],
       // 窄屏（<900）且抽屉打开时，标题、语言切换、抽屉和舞台上的 Ghost 已把可用的高度占满，提示只好落在创建框那一带；
       // 创建框此时被抽屉压在后面，提示本身不拦截点击。其余情况下创建框也不许被盖。
       ...(innerWidth < 900 && document.querySelector('.task-card') ? [] : ([['create field', '#create-title'], ['create button', '.create-form button']] as [string, string][])),

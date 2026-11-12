@@ -134,7 +134,7 @@ test.describe('子路径 /unfinished-business/', () => {
 
     await create(page, 'My own first ghost');
     await expect(ghosts(page)).toHaveCount(1);
-    await page.getByRole('button', { name: '简体中文', exact: true }).click();
+    await page.getByRole('button', { name: /switch to 简体中文/ }).click();
     await expect(page.locator('html')).toHaveAttribute('lang', 'zh-CN');
     await expect.poll(() => page.evaluate(() => JSON.parse(localStorage.getItem('ub:save') ?? '{}').settings?.lang)).toBe('zh-CN');
     await page.reload();

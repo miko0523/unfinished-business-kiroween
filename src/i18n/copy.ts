@@ -3,9 +3,10 @@ export const SUPPORT_ZH: boolean = true;
 
 export const COPY_KEYS = [
   'app.title',
-  'language.label',
-  'language.en',
-  'language.zh-CN',
+  'language.toZh',
+  'language.toEn',
+  'language.markEn',
+  'language.markZh',
   'sound.label',
   'create.label',
   'create.placeholder',

@@ -116,7 +116,7 @@ test.describe('README 截图', () => {
       task(4, at(4, 0), 'Renew the library card', 'The new card is in my wallet.', [['Find the old card', false]]),
       task(5, at(4, 1), 'Send the invoice', 'The invoice is sent and logged.', [['Fill in the hours', true], ['Press send', false]]),
     ];
-    const CONTROLS = 'h1, .lang-switch button, .keep-copy, .demo-try, #create-title, .create-form button, .footer-link';
+    const CONTROLS = 'h1, .lang-switch, .keep-copy, .demo-try, #create-title, .create-form button, .footer-link';
     let chosen: { width: number; height: number; context: BrowserContext; page: Page } | null = null;
     const tried: string[] = [];
     const FRAME = { width: 3200, height: 1800 };
@@ -206,7 +206,7 @@ test.describe('README 截图', () => {
       await loaded(dp);
       await dp.mouse.move(0, 0);
       const form = (await dp.locator('.create-form').boundingBox())!;
-      const tools = (await dp.locator('.top-tools').boundingBox())!;
+      const tools = (await dp.locator('.header-tools').boundingBox())!;
       const area = { x: Math.max(0, Math.min(form.x, tools.x) - 12), y: Math.max(0, tools.y - 12), width: Math.max(form.width, tools.width) + 24, height: form.y + form.height - tools.y + 24 };
       await save('diag-create-form-and-tools-2x', await dp.screenshot({ clip: area }));
       await detail.close();

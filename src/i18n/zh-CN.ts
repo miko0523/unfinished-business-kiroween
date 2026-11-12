@@ -3,11 +3,12 @@ import type { CopyTable } from './copy';
 // 绘本里的小屋；玩家自己写下的文字始终原样保留。
 export const zhCN: CopyTable = {
   'app.title': '未竟之事',
-  'language.label': '语言',
-  'language.en': 'English',
-  'language.zh-CN': '简体中文',
+  'language.toZh': '语言：English——切换到简体中文',
+  'language.toEn': '语言：简体中文——切换到 English',
+  'language.markEn': 'E',
+  'language.markZh': '中',
   'sound.label': '音乐和音效',
-  'create.label': '还有什么事在等着你？',
+  'create.label': '还有什么在等你？',
   'create.placeholder': '简简单单几个字就好',
   'create.submit': '迎接一只小幽灵',
   'create.error.empty': '先给小幽灵写几个字吧，标题可以写 1 到 {max} 个字。',

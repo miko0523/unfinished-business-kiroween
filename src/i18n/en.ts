@@ -3,11 +3,12 @@ import type { CopyTable } from './copy';
 // 绘本口吻；{name} 形式的占位符由 t() 的 params 替换。
 export const en: CopyTable = {
   'app.title': 'Unfinished Business',
-  'language.label': 'Language',
-  'language.en': 'English',
-  'language.zh-CN': '简体中文',
+  'language.toZh': 'Language: English — switch to 简体中文',
+  'language.toEn': 'Language: 简体中文 — switch to English',
+  'language.markEn': 'E',
+  'language.markZh': '中',
   'sound.label': 'Music and sounds',
-  'create.label': 'What is still waiting for you?',
+  'create.label': "What's waiting?",
   'create.placeholder': 'A few words are enough',
   'create.submit': 'Welcome a little ghost',
   'create.error.empty': 'Give the little ghost a few words first, between 1 and {max} characters.',

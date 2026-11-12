@@ -1,6 +1,6 @@
 import { expect, type Locator, type Page } from '@playwright/test';
 
-export const titleInput = (page: Page) => page.getByLabel('What is still waiting for you?');
+export const titleInput = (page: Page) => page.getByLabel("What's waiting?");
 export const welcome = (page: Page) => page.getByRole('button', { name: 'Welcome a little ghost' });
 export const ghosts = (page: Page) => page.locator('[data-ghost]');
 export const card = (page: Page) => page.getByRole('complementary', { name: 'Little ghost details' });

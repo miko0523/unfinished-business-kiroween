@@ -79,8 +79,8 @@ function Shell() {
     if (wasCelebrating.current && !celebrating) setMessage('live.farewellDone');
     wasCelebrating.current = celebrating;
   }, [celebrating]);
-  // 地标：header（标题与语言）、nav 在页脚里（纪念册入口）、唯一的 main、footer。Tab 顺序即 DOM 顺序：
-  // 顶栏 → 创建框 → 住客（楼层从高到低、同层从左到右）→ 门厅纪念册按钮 → 详情卡 → 页脚的纪念册入口。
+  // 地标：header（标题与四个小图标）、nav 在页脚里（纪念册入口）、唯一的 main、footer。Tab 顺序即 DOM 顺序：
+  // 顶栏（留一份副本、试试示例、语言、声音）→ 存储提示 → 创建框 → 全景小按钮 → 住客（楼层从高到低、同层从左到右）→ 门厅纪念册按钮 → 详情卡 → 页脚的纪念册入口。
   return (
     <div class={demo.active ? 'night-sky is-demo' : 'night-sky'}>
       <Sky />
@@ -88,6 +88,12 @@ function Shell() {
       <header class="app-header">
         <h1 tabIndex={-1}>{t('app.title')}</h1>
         <div class="header-tools">
+          {recovering || demo.active ? null : (
+            <>
+              <KeepCopy />
+              <TrySample />
+            </>
+          )}
           <LangSwitch />
           <SoundSwitch />
         </div>
@@ -95,8 +101,6 @@ function Shell() {
       </header>
       {recovering || demo.active ? null : (
         <div class="top-tools">
-          <KeepCopy />
-          <TrySample />
           <StorageNotice />
         </div>
       )}
@@ -106,8 +110,7 @@ function Shell() {
         {recovering ? null : (
           <div hidden={route === 'archive'} class="house-view">
             <CreateForm />
-            <CameraControls grownFloors={floors} />
-            <House grownFloors={floors}>
+            <House grownFloors={floors} corner={<CameraControls grownFloors={floors} />}>
               <WarmLamps grownFloors={floors} />
               <ResidentLayer grownFloors={floors} />
               <Lobby grownFloors={floors} />

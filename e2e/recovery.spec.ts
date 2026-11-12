@@ -68,7 +68,7 @@ const blankButton = (page: Page) => page.getByRole('button', { name: 'Carry on w
 const freshButton = (page: Page) => page.getByRole('button', { name: 'Back up the old save and start fresh' });
 const confirmFresh = (page: Page) => page.locator('dialog').getByRole('button', { name: 'Tuck it away and begin anew' });
 const houseVisible = async (page: Page) => {
-  await expect(page.getByLabel('What is still waiting for you?')).toBeVisible();
+  await expect(page.getByLabel("What's waiting?")).toBeVisible();
 };
 
 async function runFresh(page: Page) {
@@ -79,7 +79,7 @@ async function runFresh(page: Page) {
 async function expectStillRecovering(page: Page, raw: string) {
   await expect(heading(page)).toBeVisible();
   await expect(page.locator('dialog')).toHaveCount(0);
-  await expect(page.getByLabel('What is still waiting for you?')).toHaveCount(0);
+  await expect(page.getByLabel("What's waiting?")).toHaveCount(0);
   for (const b of [copyButton(page), blankButton(page), freshButton(page)]) await expect(b).toBeEnabled();
   expect(await read(page, 'ub:save')).toBe(raw);
 }
@@ -95,7 +95,7 @@ for (const [name, raw] of Object.entries(BAD_SAVES)) {
     await expect(page.getByText(/Oh dear, the old notebook got smudged/)).toBeVisible();
     for (const b of [copyButton(page), blankButton(page), freshButton(page)]) await expect(b).toBeVisible();
     // 不是看似正常的空房子
-    await expect(page.getByLabel('What is still waiting for you?')).toHaveCount(0);
+    await expect(page.getByLabel("What's waiting?")).toHaveCount(0);
     await expect(page.getByRole('button', { name: 'Welcome a little ghost' })).toHaveCount(0);
     await expect(ghosts(page)).toHaveCount(0);
     expect(await writes(page)).toEqual([]);

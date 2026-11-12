@@ -1,8 +1,9 @@
 import fc from 'fast-check';
 import { describe, expect, it } from 'vitest';
-import { computeViewLayout, focusScrollDelta, HOUSE_MAX_W, PAN_MIN_W, WIDE_MIN } from '../src/house/viewport';
+import { computeViewLayout, focusScrollDelta, HOUSE_MAX_W, PAN_MIN_W, WIDE_DEFAULT_W, WIDE_MIN, WIDE_SIDE_W } from '../src/house/viewport';
 import { stageSpot, STAGE_LIFT } from '../src/house/stageSpot';
 import { STAGE_WIDTH } from '../src/house/stage';
+import { layoutHouse } from '../src/house/layout';
 
 const viewArb = fc.record({
   vw: fc.integer({ min: 160, max: 3840 }),
@@ -18,16 +19,17 @@ describe('Feature: unfinished-business, Property 25: 响应式布局不溢出', 
         const v = computeViewLayout(i);
         expect(v.houseW).toBeLessThanOrEqual(HOUSE_MAX_W + 1e-9);
         expect(v.stageW).toBeLessThanOrEqual(STAGE_WIDTH);
-        expect(v.stageW).toBeLessThanOrEqual(Math.max(0, i.vw - 16));
+        expect(v.stageW).toBeLessThanOrEqual(Math.max(0, i.vw - 16 - (v.wide ? WIDE_SIDE_W : 0)));
+        expect(v.houseW).toBeLessThanOrEqual(((v.widthPx ?? v.stageW) * HOUSE_MAX_W) / STAGE_WIDTH + 1e-9);
         expect(computeViewLayout(i)).toEqual(v); // 纯函数：只取决于视口与镜头
       }),
       { numRuns: 200 },
     );
   });
 
-  it('聚焦时旧宅宽度恒为 min(809, 视口宽 − 16)（图宽 ×801/809），与楼层数、视口高度无关', () => {
+  it('手机聚焦时旧宅宽度恒为 min(809, 视口宽 − 16)（图宽 ×801/809），与楼层数、视口高度无关', () => {
     fc.assert(
-      fc.property(viewArb, (i) => {
+      fc.property(viewArb.filter((i) => i.vw < WIDE_MIN), (i) => {
         const v = computeViewLayout({ ...i, camera: 'focus' });
         expect(v.stageW).toBe(Math.min(STAGE_WIDTH, i.vw - 16));
         expect(v.widthPx).toBeNull();
@@ -38,18 +40,44 @@ describe('Feature: unfinished-business, Property 25: 响应式布局不溢出', 
     );
   });
 
-  it('全景只在窄屏起作用：缩小到一屏，但不小于 160，也不大于聚焦时的宽度', () => {
+  it('宽屏聚焦：默认宽度封顶 WIDE_DEFAULT_W，与楼层数、视口高度无关；起始旧宅在 1280×625 里整栋可见', () => {
+    fc.assert(
+      fc.property(viewArb.filter((i) => i.vw >= WIDE_MIN), (i) => {
+        const v = computeViewLayout({ ...i, camera: 'focus' });
+        expect(v.panorama).toBe(false);
+        expect(v.stageW).toBe(Math.min(STAGE_WIDTH, i.vw - 16 - WIDE_SIDE_W));
+        expect(v.widthPx ?? v.stageW).toBe(Math.min(v.stageW, WIDE_DEFAULT_W));
+      }),
+      { numRuns: 200 },
+    );
+    const lap = computeViewLayout({ vw: 1280, vh: 625, grownFloors: 2, camera: 'focus' });
+    expect((lap.widthPx! * layoutHouse(2).stageHeight) / STAGE_WIDTH).toBeLessThanOrEqual(625 - 16);
+  });
+
+  it('宽屏全景：整栋长高的旧宅放进一屏高，退出后回到默认大小', () => {
+    for (const grownFloors of [2, 4, 6]) {
+      const pan = computeViewLayout({ vw: 1280, vh: 625, grownFloors, camera: 'panorama' });
+      expect(pan.panorama).toBe(true);
+      const w = pan.widthPx!;
+      if (w > PAN_MIN_W) expect((w * layoutHouse(grownFloors).stageHeight) / STAGE_WIDTH).toBeLessThanOrEqual(625 - 16 + 1);
+      const back = computeViewLayout({ vw: 1280, vh: 625, grownFloors, camera: 'focus' });
+      expect(back.widthPx).toBe(WIDE_DEFAULT_W);
+    }
+  });
+
+  it('全景：缩小到一屏，但不小于 160，也不大于聚焦时的宽度', () => {
     fc.assert(
       fc.property(viewArb, (i) => {
         const v = computeViewLayout(i);
         const wide = i.vw >= WIDE_MIN;
         expect(v.wide).toBe(wide);
-        expect(v.panorama).toBe(!wide && i.camera === 'panorama');
+        expect(v.panorama).toBe(i.camera === 'panorama');
         if (v.panorama) {
           expect(v.widthPx).toBe(v.panW);
           expect(v.panW).toBeLessThanOrEqual(v.stageW);
           expect(v.panW).toBeGreaterThanOrEqual(Math.min(PAN_MIN_W, v.stageW));
-        } else expect(v.widthPx).toBeNull();
+        } else if (!wide) expect(v.widthPx).toBeNull();
+        else expect(v.widthPx ?? v.stageW).toBeLessThanOrEqual(WIDE_DEFAULT_W);
       }),
       { numRuns: 200 },
     );

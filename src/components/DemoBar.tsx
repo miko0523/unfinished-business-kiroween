@@ -33,7 +33,7 @@ export function DemoBar() {
   );
 }
 
-/** “Try sample”入口；从示例退出回来时，焦点回到这里。 */
+/** “Try sample”入口（页头的星星图标）；从示例退出回来时，焦点回到这里。 */
 export function TrySample() {
   const t = useCopy();
   const demo = useDemoControl();
@@ -42,8 +42,24 @@ export function TrySample() {
     if (demo.returning()) button.current?.focus({ preventScroll: true });
   }, []);
   return (
-    <button type="button" class="demo-try" ref={button} onClick={demo.enter}>
-      {t('demo.try')}
+    <button
+      type="button"
+      class="header-icon demo-try"
+      ref={button}
+      aria-label={t('demo.try')}
+      title={t('demo.try')}
+      onClick={demo.enter}
+    >
+      <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" focusable="false">
+        <path
+          d="M12 3.5c.6 4.6 2.4 6.4 7 7-4.6.6-6.4 2.4-7 7-.6-4.6-2.4-6.4-7-7 4.6-.6 6.4-2.4 7-7z"
+          fill="currentColor"
+          stroke="currentColor"
+          stroke-width="1.2"
+          stroke-linejoin="round"
+        />
+        <path d="M18.5 15.5v4M16.5 17.5h4" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" />
+      </svg>
     </button>
   );
 }

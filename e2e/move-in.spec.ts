@@ -1,6 +1,6 @@
 import { test, expect, type Page } from '@playwright/test';
 
-const input = (page: Page) => page.getByLabel('What is still waiting for you?');
+const input = (page: Page) => page.getByLabel("What's waiting?");
 const submit = (page: Page) => page.getByRole('button', { name: 'Welcome a little ghost' });
 const ghosts = (page: Page) => page.locator('[data-ghost]');
 
@@ -102,8 +102,9 @@ test('点击楼层空白处不改变选中；点击 Ghost 才选中', async ({ p
   await ghost.click();
   await expect(ghost).toHaveAttribute('aria-pressed', 'true');
   // 详情卡打开后页面会下移，重新量一次楼层的位置。
+  // 旧宅现在更靠上，抽屉会盖住楼层下半部分：点楼层上沿那一带的空白（抽屉之上）。
   const moved = (await page.locator('.static-layer [data-module="floor-01"]').boundingBox())!;
-  await page.mouse.click(moved.x + moved.width * 0.8, moved.y + moved.height * 0.6);
+  await page.mouse.click(moved.x + moved.width * 0.8, moved.y + moved.height * 0.15);
   await expect(ghost).toHaveAttribute('aria-pressed', 'true');
 });
 

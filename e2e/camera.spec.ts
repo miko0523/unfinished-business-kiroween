@@ -47,7 +47,7 @@ test('手机：看全景 → 整栋缩小到一屏、详情收起；再点回到
   // 整栋在一屏里
   const box = (await page.locator('.house').boundingBox())!;
   expect(box.height).toBeLessThanOrEqual(560);
-  await expect(toggle(page)).toHaveText('Back to this floor');
+  await expect(toggle(page)).toHaveAccessibleName('Back to this floor');
   await toggle(page).click();
   await expect(page.locator('.house')).toHaveAttribute('data-camera', 'focus');
   expect(Math.round(await houseWidth(page))).toBe(Math.round(focusW));
@@ -125,12 +125,12 @@ test('手机：确认完成后自动进入全景，庆祝结束后回到聚焦',
   await expect(page.locator('.house')).toHaveAttribute('data-camera', 'focus');
 });
 
-test('宽屏：没有全景入口；选中、改选、关闭，旧宅的宽度都不变', async ({ page }) => {
+test('宽屏：选中、改选、关闭，旧宅的宽度都不变', async ({ page }) => {
   await page.setViewportSize({ width: 1280, height: 900 });
   await ready(page);
   await create(page, 'A');
   await create(page, 'B');
-  await expect(toggle(page)).toHaveCount(0);
+  await expect(toggle(page)).toHaveCount(1);
   const w = await houseWidth(page);
   await ghosts(page).first().dispatchEvent('click');
   await expect(card(page)).toBeVisible();

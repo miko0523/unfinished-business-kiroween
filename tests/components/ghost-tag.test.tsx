@@ -15,7 +15,7 @@ const ghost = () => document.querySelector<HTMLElement>('[data-ghost]')!;
 describe('Ghost 脚下进度牌', () => {
   it('aria-label 始终含 X of Y done（默认与选中），标签对读屏隐藏，不含内部编号', () => {
     render(<App />);
-    fireEvent.input(screen.getByLabelText(/still waiting/i), { target: { value: 'Tidy the desk' } });
+    fireEvent.input(screen.getByLabelText(/what's waiting/i), { target: { value: 'Tidy the desk' } });
     fireEvent.click(screen.getByRole('button', { name: /welcome a little ghost/i }));
     expect(ghost().getAttribute('aria-label')).toMatch(/0 of 0 done$/);
     fireEvent.click(ghost());

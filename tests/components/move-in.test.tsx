@@ -7,7 +7,7 @@ import { App } from '../../src/components/App';
 afterEach(cleanup);
 
 function create(text: string) {
-  fireEvent.input(screen.getByLabelText(/still waiting/i), { target: { value: text } });
+  fireEvent.input(screen.getByLabelText(/what's waiting/i), { target: { value: text } });
   fireEvent.click(screen.getByRole('button', { name: /welcome a little ghost/i }));
 }
 
@@ -23,7 +23,7 @@ describe('创建表单与入住', () => {
     expect(name).toContain('floor 2, left');
     expect(name).toContain('Not clear yet');
     expect(name).not.toMatch(/[0-9a-f]{8}-[0-9a-f]{4}/);
-    expect((screen.getByLabelText(/still waiting/i) as HTMLInputElement).value).toBe('');
+    expect((screen.getByLabelText(/what's waiting/i) as HTMLInputElement).value).toBe('');
     expect(screen.getByRole('status').textContent).toBe('A little ghost moved in.');
   });
 
@@ -35,7 +35,7 @@ describe('创建表单与入住', () => {
     const long = 'x'.repeat(81);
     create(long);
     expect(screen.getByRole('alert').textContent).toContain('81');
-    expect((screen.getByLabelText(/still waiting/i) as HTMLInputElement).value).toBe(long);
+    expect((screen.getByLabelText(/what's waiting/i) as HTMLInputElement).value).toBe(long);
     expect(document.querySelectorAll('[data-ghost]')).toHaveLength(0);
   });
 
@@ -88,7 +88,7 @@ describe('创建表单与入住', () => {
     for (let i = 0; i < 10; i++) create(`t${i}`);
     create('eleventh');
     expect(document.querySelector('dialog')!.textContent).toMatch(/The house is full/);
-    expect((screen.getByLabelText(/still waiting/i) as HTMLInputElement).value).toBe('eleventh');
+    expect((screen.getByLabelText(/what's waiting/i) as HTMLInputElement).value).toBe('eleventh');
     expect(document.querySelectorAll('[data-ghost]')).toHaveLength(10);
   });
 });

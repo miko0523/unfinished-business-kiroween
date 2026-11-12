@@ -167,7 +167,7 @@ for (const lang of LANGS) for (const width of [160, 320, 900, 1280] as const) {
     await broken.addInitScript(() => localStorage.setItem('ub:save', '{ not readable'));
     await broken.goto('/');
     await expect(broken.locator('.recovery')).toBeVisible();
-    if (lang === 'zh-CN') await broken.getByRole('button', { name: '简体中文', exact: true }).click();
+    if (lang === 'zh-CN') await broken.getByRole('button', { name: /switch to 简体中文/ }).click();
     await audit(broken, 'recovery');
     await broken.getByRole('button', { name: forLanguage(lang)('recovery.fresh.button'), exact: true }).click();
     await expect(broken.getByRole('dialog')).toBeVisible();
@@ -191,17 +191,20 @@ test.describe('breakpoints and wide screens', () => {
       await fastCreate(page, 'Layout');
     }
     expect(await narrow.page.locator('.view-toggle').count()).toBe(1);
-    expect(await wide.page.locator('.view-toggle').count()).toBe(0);
+    expect(await wide.page.locator('.view-toggle').count()).toBe(1);
     expect(await wide.page.locator('.sky-trees').count()).toBeGreaterThan(0);
     expect(await narrow.page.locator('.sky-trees').count()).toBe(0);
     const moon = (p: Page) => p.locator('.sky-moon').evaluate((el) => el.getBoundingClientRect().width);
     expect(await moon(wide.page)).toBeGreaterThan(await moon(narrow.page));
+    // 两栏（左控制列 + 旧宅）整体居中。
     const house = await huge.page.locator('.house').evaluate((el) => {
       const r = el.getBoundingClientRect();
-      return { width: r.width, left: r.left, right: innerWidth - r.right };
+      const side = document.querySelector('.app-header')!.getBoundingClientRect();
+      return { width: r.width, left: side.left, right: innerWidth - r.right };
     });
     expect(house.width).toBeLessThanOrEqual(809);
-    expect(Math.abs(house.left - house.right)).toBeLessThanOrEqual(2);
+    // 左列 320 + 间距 16 + 右列 809 = 1145 宽的一组，在 2560 里居中。
+    expect(Math.abs(house.left - (2560 - 1145) / 2)).toBeLessThanOrEqual(2);
     for (const label of ['899', '900', '2560']) {
       const { page } = label === '899' ? narrow : label === '900' ? wide : huge;
       await audit(page, `${label}px house`);

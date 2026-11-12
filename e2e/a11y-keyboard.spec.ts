@@ -203,8 +203,8 @@ for (const lang of LANGS) {
 
     // Without a card.
     const plain = await allTabStops(page);
-    const kinds = plain.map((s) => (s.cls.includes('ghost-button') ? 'ghost' : s.cls.includes('archive-book') ? 'book' : s.cls.includes('footer-link') ? 'footer' : s.id === 'create-title' ? 'create' : s.cls.includes('keep-copy') ? 'keep' : s.cls.includes('demo-try') ? 'try' : s.tag === 'BUTTON' && s.name === c['language.en'] ? 'lang' : s.tag === 'BUTTON' && s.name === c['language.zh-CN'] ? 'lang' : s.cls.includes('sound-switch') ? 'sound' : s.name === c['create.submit'] ? 'submit' : s.cls));
-    expect(kinds).toEqual(['lang', 'lang', 'sound', 'keep', 'try', 'create', 'submit', 'ghost', 'ghost', 'ghost', 'ghost', 'ghost', 'book', 'footer']);
+    const kinds = plain.map((s) => (s.cls.includes('ghost-button') ? 'ghost' : s.cls.includes('archive-book') ? 'book' : s.cls.includes('footer-link') ? 'footer' : s.id === 'create-title' ? 'create' : s.cls.includes('keep-copy') ? 'keep' : s.cls.includes('demo-try') ? 'try' : s.cls.includes('lang-switch') ? 'lang' : s.cls.includes('view-toggle') ? 'view' : s.cls.includes('sound-switch') ? 'sound' : s.name === c['create.submit'] ? 'submit' : s.cls));
+    expect(kinds).toEqual(['keep', 'try', 'lang', 'sound', 'create', 'submit', 'view', 'ghost', 'ghost', 'ghost', 'ghost', 'ghost', 'book', 'footer']);
     const ghostStops = plain.filter((s) => s.cls.includes('ghost-button')).map((s) => [Number(s.floor), Number(s.slot)]);
     expect(ghostStops).toEqual([[4, 0], [3, 0], [3, 1], [2, 0], [2, 1]]);
 
@@ -385,16 +385,22 @@ async function expectVisibleRing(page: Page, target: Locator, label: string) {
   // Ring pixels = pixels the focus state changed. Two-tone rings (dark inner, white outer) are used on the painted
   // house, whose backdrop varies pixel by pixel, so the rule is: at least 3px of the ring (the thickness of the
   // outline itself) must stand out from the surface underneath by 3:1.
-  const row = 3;
+  // The painted house is drawn at different scales, so the one sampled row can land on a texture of the same luminance as the
+  // ring: take the best of the six sampled rows (each row is judged by the same rule).
   let changed = 0;
   let strong = 0;
-  for (let x = 0; x < withRing.width; x++) {
-    const a = pixelAt(withRing, x, row);
-    const b = pixelAt(without, x, row);
-    if (Math.abs(a[0] - b[0]) + Math.abs(a[1] - b[1]) + Math.abs(a[2] - b[2]) < 30) continue;
-    changed++;
-    const [l1, l2] = [luminance(a), luminance(b)];
-    if ((Math.max(l1, l2) + 0.05) / (Math.min(l1, l2) + 0.05) >= 3) strong++;
+  for (let row = 0; row < 6; row++) {
+    let rowChanged = 0;
+    let rowStrong = 0;
+    for (let x = 0; x < withRing.width; x++) {
+      const a = pixelAt(withRing, x, row);
+      const b = pixelAt(without, x, row);
+      if (Math.abs(a[0] - b[0]) + Math.abs(a[1] - b[1]) + Math.abs(a[2] - b[2]) < 30) continue;
+      rowChanged++;
+      const [l1, l2] = [luminance(a), luminance(b)];
+      if ((Math.max(l1, l2) + 0.05) / (Math.min(l1, l2) + 0.05) >= 3) rowStrong++;
+    }
+    if (rowStrong > strong || (rowStrong === strong && rowChanged > changed)) { strong = rowStrong; changed = rowChanged; }
   }
   expect(changed, `${label}: ring pixels drawn`).toBeGreaterThanOrEqual(3);
   expect(strong, `${label}: ring pixels with >=3:1 contrast against the surface underneath`).toBeGreaterThanOrEqual(3);
@@ -406,7 +412,7 @@ test('focus rings are at least 3px, solid and visibly contrasted on the real sur
   await seedSave(page, saveWithArchive(1));
   await ready(page);
   await create(page, 'Ring check');
-  await expectVisibleRing(page, page.locator('.lang-switch button').first(), 'language switch');
+  await expectVisibleRing(page, page.locator('.lang-switch'), 'language switch');
   await expectVisibleRing(page, page.locator('.keep-copy'), 'keep a copy');
   await expectVisibleRing(page, page.locator('#create-title'), 'create field');
   await expectVisibleRing(page, page.locator('[data-ghost]'), 'ghost button');
@@ -429,7 +435,7 @@ for (const lang of LANGS) {
     await page.addInitScript((raw) => localStorage.setItem('ub:save', raw), '{ not readable');
     await page.goto('/');
     await expect(page.locator('.recovery')).toBeVisible();
-    if (lang === 'zh-CN') await page.getByRole('button', { name: zhCN['language.zh-CN'], exact: true }).click();
+    if (lang === 'zh-CN') await page.getByRole('button', { name: en['language.toZh'], exact: true }).click();
     await expect(page.getByRole('banner')).toHaveCount(1);
     await expect(page.getByRole('main')).toHaveCount(1);
     await expect(page.getByRole('heading', { level: 1 })).toHaveCount(1);
@@ -449,9 +455,9 @@ for (const lang of LANGS) {
       stops.push(a.name);
       if (a.name === c['recovery.fresh.button']) break;
     }
-    // The header comes first: the two language buttons and the sound switch.
-    expect(stops.slice(0, 3)).toEqual([c['language.en'], c['language.zh-CN'], c['sound.label']]);
-    expect(stops.slice(3)).toEqual([c['recovery.copy.button'], c['recovery.blank.button'], c['recovery.fresh.button']]);
+    // The header comes first: the language toggle and the sound switch.
+    expect(stops.slice(0, 2)).toEqual([c[lang === 'en' ? 'language.toZh' : 'language.toEn'], c['sound.label']]);
+    expect(stops.slice(2)).toEqual([c['recovery.copy.button'], c['recovery.blank.button'], c['recovery.fresh.button']]);
     await page.keyboard.press('Enter');
     await expect(page.getByRole('dialog')).toBeVisible();
     expect((await active(page)).inDialog).toBe(true);

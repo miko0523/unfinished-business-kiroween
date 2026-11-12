@@ -16,11 +16,11 @@ export function activeFloor(focusFloor: number | null, residentFloors: readonly 
 }
 
 /**
- * 手机镜头（宽屏不显示也不起作用）：
+ * 镜头（手机与宽屏都有）：
  * - “看全景 / 回到当前楼层”按钮；进入全景时详情收起。
  * - 聚焦模式下，把当前活动楼层滚进视口；全景模式下滚到旧宅顶部。
  * - 最近被创建、勾选的 Ghost 所在楼层成为当前楼层。
- * 宽屏下镜头固定为聚焦，旧宅宽度不因任何选中而改变。
+ * 旧宅宽度不因任何选中而改变；全景才按视口高度缩放，退出后回到默认大小。
  */
 export function CameraControls({ grownFloors }: { grownFloors: GrownFloors }) {
   const t = useCopy();
@@ -32,11 +32,6 @@ export function CameraControls({ grownFloors }: { grownFloors: GrownFloors }) {
   const floors = useStore(store, (s) => s.tasks.map((x) => x.slot.floor).join(','));
   const wide = w >= WIDE_MIN;
   const active = activeFloor(focusFloor, floors ? floors.split(',').map(Number) : []);
-
-  // 宽屏没有全景：别让窄屏留下的镜头状态吞掉第一次点击。
-  useEffect(() => {
-    if (wide) ui.setCamera('focus');
-  }, [wide, ui]);
 
   // 新住客、勾选：那一层成为当前楼层。
   useEffect(
@@ -50,7 +45,8 @@ export function CameraControls({ grownFloors }: { grownFloors: GrownFloors }) {
   );
 
   useEffect(() => {
-    if (wide) return;
+    // 宽屏的聚焦视图不滚动（左栏常驻、旧宅较小）；全景则回到旧宅顶部。
+    if (wide && camera !== 'panorama') return;
     const house = document.querySelector<HTMLElement>('.house');
     if (!house) return;
     const behavior: ScrollBehavior = reduced ? 'auto' : 'smooth';
@@ -67,11 +63,26 @@ export function CameraControls({ grownFloors }: { grownFloors: GrownFloors }) {
     if (delta !== 0) window.scrollBy({ top: delta, behavior });
   }, [wide, camera, active, grownFloors, reduced, h]);
 
-  if (wide) return null;
   const panorama = camera === 'panorama';
+  const label = t(panorama ? 'view.focus' : 'view.panorama');
   return (
-    <button type="button" class="view-toggle" aria-pressed={panorama} onClick={() => ui.setCamera(panorama ? 'focus' : 'panorama')}>
-      {t(panorama ? 'view.focus' : 'view.panorama')}
+    <button
+      type="button"
+      class="view-toggle"
+      aria-pressed={panorama}
+      aria-label={label}
+      title={label}
+      onClick={() => ui.setCamera(panorama ? 'focus' : 'panorama')}
+    >
+      <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" focusable="false">
+        <g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          {panorama ? (
+            <path d="M9 4v5H4M15 4v5h5M9 20v-5H4M15 20v-5h5" />
+          ) : (
+            <path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5" />
+          )}
+        </g>
+      </svg>
     </button>
   );
 }

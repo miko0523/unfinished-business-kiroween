@@ -17,16 +17,106 @@
   display: none;
 }
 
-/* 手机“看全景 / 回到当前楼层”。 */
+/* “看全景 / 回到当前楼层”：旧宅右上角的半透明小图标。 */
 .view-toggle {
-  align-self: center;
-  margin: 0 0 8px;
+  position: absolute;
+  z-index: 16;
+  top: 6px;
+  right: 6px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  width: 44px;
+  min-width: 44px;
+  height: 44px;
+  min-height: 44px;
+  padding: 0;
+  color: #f3ead2;
+  background: rgba(13, 21, 48, 0.62);
+  border: 1px solid rgba(243, 234, 210, 0.55);
+  border-radius: 10px;
+  -webkit-backdrop-filter: blur(4px);
+  backdrop-filter: blur(4px);
 }
 
-@media (max-width: 899px) {
-  .house-view:has(.task-card) .view-toggle {
-    align-self: flex-start;
-    padding-inline: 8px;
+/* 极窄屏（< 240px）：旧宅只有一百来像素宽，44px 的按钮会盖住最高一层的 Ghost；改放到旧宅上方的空位里。 */
+@media (max-width: 239px) {
+  .house {
+    margin-top: 52px;
+  }
+
+  .view-toggle {
+    top: -48px;
+    right: 0;
+  }
+}
+
+.view-toggle[aria-pressed='true'] {
+  color: #1c1b22;
+  background: rgba(255, 212, 121, 0.88);
+  border-color: #c9972b;
+}
+
+.view-toggle svg {
+  display: block;
+}
+
+/*
+ * 宽屏（与 WIDE_MIN、WIDE_SIDE_W 对应，见 house/viewport.ts）：左边一窄列放页头、存储提示、创建框和页脚入口，
+ * 旧宅作为主角占右边整列，按视口高度缩放。main 与 house-view 用 display: contents 摊平，DOM（Tab）顺序不变。
+ */
+@media (min-width: 900px) {
+  .night-sky:has(.house-view:not([hidden])) {
+    display: grid;
+    grid-template-columns: 320px minmax(0, 809px);
+    grid-template-rows: auto auto auto auto auto 1fr;
+    column-gap: 16px;
+    align-content: start;
+    align-items: start;
+    justify-content: center;
+  }
+
+  .night-sky:has(.house-view:not([hidden])) > .demo-bar {
+    grid-column: 1 / -1;
+    grid-row: 1;
+  }
+
+  .night-sky:has(.house-view:not([hidden])) > .app-header {
+    grid-column: 1;
+    grid-row: 2;
+  }
+
+  .night-sky:has(.house-view:not([hidden])) > .top-tools {
+    grid-column: 1;
+    grid-row: 3;
+  }
+
+  .night-sky:has(.house-view:not([hidden])) > .app-main,
+  .night-sky:has(.house-view:not([hidden])) .house-view:not([hidden]) {
+    display: contents;
+  }
+
+  .night-sky:has(.house-view:not([hidden])) .create-form {
+    grid-column: 1;
+    grid-row: 4;
+  }
+
+  .night-sky:has(.house-view:not([hidden])) > .app-footer {
+    grid-column: 1;
+    grid-row: 5;
+    margin: 4px 0 0;
+    text-align: left;
+  }
+
+  .night-sky:has(.house-view:not([hidden])) > .app-footer nav {
+    justify-content: flex-start;
+  }
+
+  .night-sky:has(.house-view:not([hidden])) .house {
+    grid-column: 2;
+    grid-row: 2 / 7;
+    justify-self: center;
   }
 }
 

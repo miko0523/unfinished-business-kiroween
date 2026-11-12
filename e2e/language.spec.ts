@@ -10,7 +10,11 @@ import { ready } from './helpers/app';
 
 type Probe = { __languageWrites: string[]; __languageReads: number };
 const writes = (page: Page) => page.evaluate(() => (window as unknown as Probe).__languageWrites);
-const selected = (page: Page, language: 'en' | 'zh-CN') => page.getByRole('button', { name: language === 'en' ? 'English' : '简体中文', exact: true });
+// 语言现在是一个“E / 中”小按钮：名字说明当前语言与点了会切到哪；selectLang 保证页面最终是目标语言。
+const langToggle = (page: Page) => page.getByRole('button', { name: /^(Language|语言)[:：]/ });
+async function selectLang(page: Page, language: 'en' | 'zh-CN') {
+  if ((await page.locator('html').getAttribute('lang')) !== language) await langToggle(page).click();
+}
 
 // 每个用例使用 Playwright 新建的隔离 context；只在其中种测试存档，不接触日常浏览器。
 async function probe(page: Page, seed: string | null = null, unavailable = false) {
@@ -69,19 +73,19 @@ test('首次访问无视中文浏览器偏好，正常模式双向切换后刷�
   await probe(page);
   await ready(page);
   await expect(page.locator('html')).toHaveAttribute('lang', 'en');
-  await expect(selected(page, 'en')).toHaveAttribute('aria-pressed', 'true');
+  await expect(langToggle(page)).toHaveAccessibleName(en['language.toZh']);
   expect(await page.evaluate(() => (window as unknown as Probe).__languageReads)).toBe(0);
   expect(await writes(page)).toEqual([]);
   await page.getByLabel(en['create.label']).fill('My original words');
-  await selected(page, 'zh-CN').click();
+  await selectLang(page, 'zh-CN');
   await expect(page.getByLabel(zhCN['create.label'])).toHaveValue('My original words');
   await expect(page.locator('html')).toHaveAttribute('lang', 'zh-CN');
   await expect(page).toHaveTitle(zhCN['app.title']);
   await expect.poll(() => page.evaluate(() => JSON.parse(localStorage.getItem('ub:save') ?? '{}').settings?.lang)).toBe('zh-CN');
   expect(await writes(page)).toEqual(['local:set:ub:save']);
   await page.reload();
-  await expect(selected(page, 'zh-CN')).toHaveAttribute('aria-pressed', 'true');
-  await selected(page, 'en').click();
+  await expect(langToggle(page)).toHaveAccessibleName(zhCN['language.toEn']);
+  await selectLang(page, 'en');
   // 不等防抖就刷新，也会由 pagehide 补写。
   await page.reload();
   await expect(page.locator('html')).toHaveAttribute('lang', 'en');
@@ -93,18 +97,18 @@ test('恢复界面和从恢复进入的内存模式，语言切换、操作和�
   const raw = '{ smudged notebook';
   await probe(page, raw);
   await page.goto('/');
-  await selected(page, 'zh-CN').click();
+  await selectLang(page, 'zh-CN');
   await expect(page.getByRole('heading', { name: zhCN['recovery.title'] })).toBeVisible();
   await expect(page.locator('html')).toHaveAttribute('lang', 'zh-CN');
   await flush(page);
   expect(await writes(page)).toEqual([]);
   await page.reload();
   await expect(page.locator('html')).toHaveAttribute('lang', 'en');
-  await selected(page, 'zh-CN').click();
+  await selectLang(page, 'zh-CN');
   await page.getByRole('button', { name: zhCN['recovery.blank.button'] }).click();
   await expect(page.getByLabel(zhCN['create.label'])).toBeVisible();
-  await selected(page, 'en').click();
-  await selected(page, 'zh-CN').click();
+  await selectLang(page, 'en');
+  await selectLang(page, 'zh-CN');
   await page.getByLabel(zhCN['create.label']).fill('Just this page');
   await page.getByRole('button', { name: zhCN['create.submit'] }).click();
   await flush(page);
@@ -122,9 +126,9 @@ test('恢复界面和从恢复进入的内存模式，语言切换、操作和�
 test('存储完全不可用时，切换语言不尝试写入', async ({ page }) => {
   await probe(page, null, true);
   await ready(page);
-  await selected(page, 'zh-CN').click();
+  await selectLang(page, 'zh-CN');
   await expect(page.getByText(zhCN['notice.unsaved'])).toBeVisible();
-  await selected(page, 'en').click();
+  await selectLang(page, 'en');
   await flush(page);
   await page.waitForTimeout(400);
   expect(await writes(page)).toEqual([]);
@@ -133,19 +137,19 @@ test('存储完全不可用时，切换语言不尝试写入', async ({ page }) 
 test('示例继承当前语言，示例中切换零写入，返回真实房子恢复原语言', async ({ page }) => {
   await probe(page);
   await ready(page);
-  await selected(page, 'zh-CN').click();
+  await selectLang(page, 'zh-CN');
   await flush(page);
   await page.getByRole('button', { name: zhCN['demo.try'] }).click();
   await expect(page.locator('[data-ghost]')).toHaveAccessibleName(/整理书桌/);
   const before = await writes(page);
-  await selected(page, 'en').click();
+  await selectLang(page, 'en');
   await flush(page);
   expect(await writes(page)).toEqual(before);
   await expect(page.locator('html')).toHaveAttribute('lang', 'en');
   await expect(page.locator('[data-ghost]')).toHaveAccessibleName(/Tidy the desk/);
   await page.getByRole('button', { name: en['demo.exit'] }).click();
   await expect(page.locator('html')).toHaveAttribute('lang', 'zh-CN');
-  await expect(selected(page, 'zh-CN')).toHaveAttribute('aria-pressed', 'true');
+  await expect(langToggle(page)).toHaveAccessibleName(zhCN['language.toEn']);
 });
 
 for (const width of [1280, 320]) for (const lang of ['en', 'zh-CN'] as const) {
@@ -158,7 +162,7 @@ for (const width of [1280, 320]) for (const lang of ['en', 'zh-CN'] as const) {
     page.on('pageerror', (error) => errors.push(error.message));
     await probe(page);
     await ready(page);
-    await selected(page, lang).click();
+    await selectLang(page, lang);
     await expect(page.locator('html')).toHaveAttribute('lang', lang);
     await snapshot(page, `${label}-home`);
     await page.getByRole('button', { name: table['create.submit'] }).click();
@@ -210,7 +214,7 @@ for (const width of [1280, 320]) for (const lang of ['en', 'zh-CN'] as const) {
     await page.emulateMedia({ reducedMotion: 'reduce' });
     await probe(page, '{ smudged notebook');
     await page.goto('/');
-    await selected(page, lang).click();
+    await selectLang(page, lang);
     await expect(page.locator('html')).toHaveAttribute('lang', lang);
     await snapshot(page, `${label}-recovery`);
     await page.getByRole('button', { name: table['recovery.fresh.button'] }).click();

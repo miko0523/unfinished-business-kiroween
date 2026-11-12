@@ -164,7 +164,8 @@ test('窗口变化：舞台上的 Ghost 跟着抽屉走；页面滚动时仍站�
 });
 
 test('视口太矮放不下舞台：Ghost 留在屋里，退回“滚动露出”的兜底', async ({ page }) => {
-  await page.setViewportSize({ width: 1280, height: 330 });
+  // 旧宅现在更小更靠上，视口要矮到 270 才放不下舞台。
+  await page.setViewportSize({ width: 1280, height: 270 });
   await ready(page);
   await create(page, 'Short');
   const ghost = ghosts(page).first();

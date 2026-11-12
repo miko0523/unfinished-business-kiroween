@@ -1,76 +1,100 @@
+/* 页头：标题在左，四个小图标靠右同一行（留一份副本、试试示例、语言、声音）。
+   手机上按钮不换行（320 起）；窄到连 100px 标题加一整组都放不下（< 300px）时，整组才落到第二行靠右。 */
 .app-header {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px 12px;
+  gap: 4px 8px;
   align-items: center;
   width: 100%;
   max-width: 560px;
-  margin: 8px 0 12px;
+  margin: 2px 0 6px;
 }
 
 .app-header h1 {
-  /* 100px 刚好放下英文标题最长的词（Unfinished）；min-content 兜底：字体更宽时让右侧工具整组换行，而不是标题被挤得溢出。 */
   flex: 1 1 100px;
-  min-width: min-content;
+  min-width: 0;
   margin: 0;
+  font-size: 1rem;
+  line-height: 1.2;
+  overflow-wrap: anywhere;
 }
 
-/* 语言切换与小喇叭是一组，一起换行：宽度够时（360px 起）和标题同一行；更窄（320）时标题独占第一行，
-   这一组在第二行靠右，小喇叭不会独自掉到一行。组内也允许换行：只在放不下一组的极窄宽度（160、200）才会用到，避免横向溢出。 */
 .header-tools {
   display: flex;
-  flex: 0 1 auto;
+  flex: 0 0 auto;
+  /* 正常宽度一行放得下（4×44 + 3×6 = 194）；只有 160–200 这种极窄屏才折行，避免横向溢出。 */
   flex-wrap: wrap;
   justify-content: flex-end;
-  gap: 8px 12px;
+  gap: 6px;
   align-items: center;
-  min-width: 0;
+  max-width: 100%;
   margin-left: auto;
-  max-width: 100%;
 }
 
-.lang-switch {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  justify-content: center;
-  max-width: 100%;
-  flex: 0 0 auto;
-}
-
-.lang-switch button {
-  min-width: 80px;
-  padding: 0 8px;
-  color: #f3ead2;
-  background: #1b2547;
-  border-color: #6d7bb5;
-}
-
-.lang-switch button[aria-pressed='true'] {
-  color: #1c1b22;
-  background: #ffd479;
-  border-color: #c9972b;
-}
-
-/* 声音开关：语言切换右边的小喇叭，在 .header-tools 组里最右；按下（开）时与选中的语言同色。 */
+/* 页头的小图标按钮：同一个尺寸、同一个形状（40×40，点击区不小于 36）。 */
+.header-icon,
+.lang-switch,
 .sound-switch {
   flex: 0 0 auto;
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  box-sizing: border-box;
   width: 44px;
+  min-width: 44px;
+  height: 44px;
+  min-height: 44px;
   padding: 0;
   color: #f3ead2;
   background: #1b2547;
-  border-color: #6d7bb5;
+  border: 2px solid #6d7bb5;
+  border-radius: 8px;
 }
 
+.header-icon svg,
+.sound-switch svg {
+  display: block;
+}
+
+/* “试试示例”：金色边与星，和按下态区分开。 */
+.demo-try {
+  color: #ffd479;
+  border-color: #ffd479;
+}
+
+/* 存储出问题时的“留一份副本”：金底加一圈光晕，比别的图标醒目。 */
+.keep-copy.loud {
+  color: #1c1b22;
+  background: #ffd479;
+  border-color: #c9972b;
+  box-shadow: 0 0 0 3px rgba(255, 212, 121, 0.45);
+}
+
+/* 语言：“E / 中”，当前语言那一半亮且粗，另一半暗。 */
+.lang-switch {
+  gap: 1px;
+  font-size: 0.8125rem;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.lang-switch span {
+  opacity: 0.6;
+}
+
+.lang-switch span[data-current='true'] {
+  opacity: 1;
+  font-weight: 800;
+  color: #ffd479;
+}
+
+.lang-switch .lang-sep {
+  opacity: 0.45;
+}
+
+/* 声音开关：按下（开）时变金色。 */
 .sound-switch[aria-pressed='true'] {
   color: #1c1b22;
   background: #ffd479;
   border-color: #c9972b;
-}
-
-.sound-switch svg {
-  display: block;
 }

@@ -29,7 +29,7 @@ const click = (name: RegExp | string, scope: HTMLElement | Document = document.b
   fireEvent.click(within(scope as HTMLElement).getByRole('button', { name }));
 
 function create(title: string) {
-  type(/still waiting/i, title);
+  type(/what's waiting/i, title);
   click(/welcome a little ghost/i);
 }
 const ghost = () => document.querySelector<HTMLElement>('[data-ghost]')!;
