@@ -7,6 +7,8 @@
   box-sizing: border-box;
   width: 100%;
   max-width: 680px;
+  /* 纪念册整页靠页面本身纵向滚动；明确交给浏览器做上下拖动和双指缩放。 */
+  touch-action: pan-y pinch-zoom;
 }
 
 .archive-back {
@@ -18,7 +20,12 @@
 
 .book {
   position: relative;
+  /*
+   * 只裁圆角，不做滚动容器：iPhone Safari 会把从 overflow: hidden 的合成层里开始的上下拖动困在这层里，
+   * 整页划不动、只回弹。clip 不形成滚动容器；旧 Safari 不认 clip 时退回 hidden。
+   */
   overflow: hidden;
+  overflow: clip;
   border: 7px solid #58402a;
   border-bottom-width: 12px;
   border-radius: 14px 20px 18px 11px;
