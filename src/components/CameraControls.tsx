@@ -48,7 +48,9 @@ export function CameraControls({ grownFloors }: { grownFloors: GrownFloors }) {
     // 宽屏的聚焦视图不滚动（左栏常驻、旧宅较小）；全景则回到旧宅顶部。
     if (wide && camera !== 'panorama') return;
     const house = document.querySelector<HTMLElement>('.house');
-    if (!house) return;
+    // 旧宅藏起来时（比如在纪念册里）不动镜头：量到的位置全是 0，会把别的页面往回推。
+    // iPhone Safari 往下划时地址栏收起、视口变高，也会叫醒这里。
+    if (!house || house.closest('[hidden]')) return;
     const behavior: ScrollBehavior = reduced ? 'auto' : 'smooth';
     const rect = house.getBoundingClientRect();
     if (camera === 'panorama') {
